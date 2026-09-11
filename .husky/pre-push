@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+bun run --cwd cli typecheck
+bun run --cwd app build
