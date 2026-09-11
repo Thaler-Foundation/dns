@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import path from "path";
 
 const URL = "https://dns.thaler.finance";
-const baseDir = "src/app";
+const baseDir = "app";
 const dynamicDirs = [""];
 const excludeDirs = [""];
 
