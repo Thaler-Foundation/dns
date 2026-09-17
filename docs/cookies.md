@@ -20,13 +20,10 @@ DNS does not use advertising cookies today. If that changes, they will stay off 
 
 | Name / storage | Who | Why |
 | --- | --- | --- |
-| Privy session cookies and local storage | Privy | Email or Google sign-in, embedded Solana wallet |
-| `dns-agent:` session flags | DNS | Remember that you enabled the agent signer in this tab |
 | Theme preference (`next-themes` / class on `html`) | DNS | Light or dark appearance |
 
-Without necessary storage, you cannot stay signed in. The cookie banner does not block these.
+The cookie banner does not block necessary preferences.
 
-If you use **Google** login, Google may set its own cookies on Google’s domains. That is Google’s control. Read [Google cookies](https://policies.google.com/technologies/cookies).
 
 ## Preferences
 
@@ -46,7 +43,7 @@ If you pick **Allow analytics**, DNS may measure page views with a privacy-respe
 
 - Use the banner: **Necessary only** or **Allow analytics**.
 - Use **Cookie settings** in the footer.
-- Clear site data in your browser to wipe Privy session and `dns-consent-v1`.
+- Clear site data in your browser to reset settings and `dns-consent-v1`.
 
 Browser “Do Not Track” does not change necessary sign-in cookies.
 

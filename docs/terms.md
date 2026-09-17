@@ -14,7 +14,7 @@ The software may run against **devnet**, **mainnet**, or other clusters as the s
 
 ## Accounts
 
-You sign in with Privy (email or Google). DNS uses the Privy Solana embedded wallet. You are responsible for that wallet, for approving transactions, and for keeping access to your login method secure.
+You connect your Solana wallet. You are responsible for that wallet, for approving transactions, and for keeping access to your keys secure.
 
 You must not impersonate another person or misuse another user’s account.
 
@@ -47,7 +47,7 @@ Network fees (SOL and any protocol fees) are paid on Solana to those networks or
 
 ## Third parties
 
-Privy, Google (if you use Google login), Solana RPC providers, and any trading, oracle, or infrastructure partners are separate services. Their terms apply to their systems.
+Solana RPC providers, wallet providers, and any trading, oracle, or infrastructure partners are separate services. Their terms apply to their systems.
 
 ## Intellectual property
 

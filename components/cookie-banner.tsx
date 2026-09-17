@@ -43,7 +43,7 @@ export function CookieBanner() {
             Cookies
           </h2>
           <p id="slab-cookie-copy" className="mt-1 text-sm leading-relaxed text-foreground">
-            Necessary cookies run Privy sign-in. Analytics stay off unless you
+            Necessary cookies run essential site features. Analytics stay off unless you
             allow them.{" "}
             <Link href="/cookies" className="text-kiln underline underline-offset-4 hover:text-foreground">
               Cookie Policy

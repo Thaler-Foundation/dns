@@ -9,7 +9,7 @@ Contact: use the channels listed on [thaler.finance](https://thaler.finance) or 
 ## Summary
 
 - DNS is a trading / finance interface on Solana. On-chain balances, positions, and transactions you authorize are public on Solana.
-- Sign-in uses Privy (email or Google) and a Solana embedded wallet.
+- Wallet connection uses Solana-compatible wallets.
 - DNS does not sell your personal data.
 - DNS does not load analytics or advertising pixels unless you allow analytics cookies.
 
@@ -25,11 +25,9 @@ Do not treat a blockchain address as private. Anyone who knows your address can 
 
 ## What we collect
 
-**Account (required to sign in)**
+**Account**
 
-- Privy user id and access token (session).
-- Solana embedded wallet address and wallet id.
-- Email or Google account data that Privy collects to create that session.
+- Connected Solana wallet address.
 
 **Product use**
 
@@ -39,19 +37,17 @@ Do not treat a blockchain address as private. Anyone who knows your address can 
 **Technical**
 
 - Server logs that your host may keep (IP, user agent, request path) to operate the site.
-- Necessary cookies and storage for sign-in and theme. See the [Cookie Policy](/cookies).
+- Necessary cookies and storage for theme and preferences. See the [Cookie Policy](/cookies).
 
 We do not ask for payment card data through DNS. Network fees (SOL and any protocol fees) are paid on Solana to those networks or programs, not as a card charge to DNS.
 
-## Sign-in processors
-
-Privy authenticates you and holds the embedded wallet. If you pick Google, Google is a processor for that login. Read [Privy privacy](https://www.privy.io/privacy-policy) and, if you use Google, [Google privacy](https://policies.google.com/privacy).
+## External services
 
 Solana RPC providers and any trading / oracle / infrastructure partners used by the app see the public requests and transactions required to run the product.
 
 ## Cookies and tracking
 
-Necessary cookies and storage run sign-in and basic preferences. Analytics and advertising do not run unless you allow them in the cookie banner. Details: [Cookie Policy](/cookies).
+Necessary cookies and storage run basic preferences. Analytics and advertising do not run unless you allow them in the cookie banner. Details: [Cookie Policy](/cookies).
 
 ## Legal bases (EEA / UK)
 
@@ -59,11 +55,11 @@ Where GDPR applies: contract (to run the account and service you request), legit
 
 ## Retention
 
-On-chain data remains on Solana according to that network. Privy session data follows Privy’s retention. Server logs follow the host’s retention. Consent choice stays in your browser until you clear it or change it.
+On-chain data remains on Solana according to that network. Server logs follow the host’s retention. Consent choice stays in your browser until you clear it or change it.
 
 ## Your rights
 
-You may sign out. You may close the Privy account through Privy. You may change or clear cookie consent as described in the [Cookie Policy](/cookies).
+You may disconnect your wallet. You may change or clear cookie consent as described in the [Cookie Policy](/cookies).
 
 You cannot erase public Solana history with a button in DNS.
 

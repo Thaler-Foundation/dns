@@ -1,10 +1,8 @@
 "use client";
 
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalletDrawer } from "@/components/wallet-drawer";
-import { privyConfigured } from "@/lib/privy-config";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { isSessionPending } from "@/lib/wallet";
 
@@ -12,19 +10,6 @@ export function WalletButton() {
   const wallet = useDnsWallet();
   const { ready, connected, connecting, address, login } = wallet;
 
-  if (!privyConfigured()) {
-    return (
-      <Button
-        size="sm"
-        className="min-h-10 shrink-0 sm:min-h-7"
-        onClick={() =>
-          toast.error("Set NEXT_PUBLIC_PRIVY_APP_ID to enable sign-in")
-        }
-      >
-        Sign in
-      </Button>
-    );
-  }
 
   if (connected && address) {
     return <WalletDrawer />;

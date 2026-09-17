@@ -31,12 +31,12 @@ export type DnsWallet = {
   signMessage: DnsSigner["signMessage"];
 };
 
-// True while Privy is restoring a session. Do not render signed-out chrome.
+// True while restoring a session. Do not render signed-out chrome.
 export function isSessionPending(wallet: DnsWallet): boolean {
   return !wallet.ready || (wallet.authenticated && !wallet.connected);
 }
 
-// True only after Privy has settled and there is no session.
+// True only after auth has settled and there is no session.
 export function isSignedOut(wallet: DnsWallet): boolean {
   return wallet.ready && !wallet.connected && !wallet.authenticated;
 }

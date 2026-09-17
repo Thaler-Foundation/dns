@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Copy, KeyRound, LogOut, Settings, User } from "lucide-react";
+import { Copy, LogOut, Settings, User } from "lucide-react";
 import { toast } from "sonner";
-import { useExportWallet } from "@privy-io/react-auth/solana";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +24,9 @@ function copyText(value: string) {
 export function WalletDrawer() {
   const wallet = useDnsWallet();
   const { signer } = useAccount();
-  const { exportWallet } = useExportWallet();
   const router = useRouter();
   const address = wallet.address;
+
 
   if (!address) {
     return null;
@@ -88,19 +87,6 @@ export function WalletDrawer() {
           >
             <Settings />
             Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="min-h-10 gap-2"
-            onClick={() => {
-              void exportWallet({ address }).catch((err) =>
-                toast.error(
-                  err instanceof Error ? err.message : "Could not export wallet"
-                )
-              );
-            }}
-          >
-            <KeyRound />
-            Export wallet
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
