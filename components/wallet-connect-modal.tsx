@@ -83,7 +83,9 @@ export function WalletConnectModal({
 
         if (matchingWallet) {
           select(matchingWallet.adapter.name);
-          await connect();
+          if (!matchingWallet.adapter.connected) {
+            await matchingWallet.adapter.connect();
+          }
           onOpenChange(false);
           toast.success(`Connected to ${config.name}`);
         } else {
@@ -93,9 +95,16 @@ export function WalletConnectModal({
           toast.success(`Connected to ${config.name}`);
         }
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : `Could not connect to ${config.name}`;
-        if (!message.toLowerCase().includes("user rejected")) {
+        const raw = err instanceof Error ? err.message : String(err ?? "");
+        const message = raw.trim();
+        const lower = message.toLowerCase();
+        if (
+          message &&
+          !lower.includes("user rejected") &&
+          !lower.includes("rejected the request") &&
+          !lower.includes("walletnotselectederror") &&
+          !lower.includes("window closed")
+        ) {
           toast.error(message);
         }
       } finally {
