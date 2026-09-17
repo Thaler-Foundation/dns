@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Copy, LogOut, Settings, User } from "lucide-react";
+import { Copy, ExternalLink, LogOut, Settings, User } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -16,87 +16,130 @@ import Image from "next/image";
 
 function copyText(value: string) {
   void navigator.clipboard.writeText(value).then(
-    () => toast.success("Copied"),
-    () => toast.error("Could not copy")
+    () => toast.success("Address copied to clipboard"),
+    () => toast.error("Could not copy address")
   );
+}
+
+function shortenAddress(addr: string, chars = 4): string {
+  if (addr.length <= chars * 2 + 3) return addr;
+  return `${addr.slice(0, chars)}...${addr.slice(-chars)}`;
 }
 
 export function WalletDrawer() {
   const wallet = useDnsWallet();
   const { signer } = useAccount();
   const router = useRouter();
-  const address = wallet.address;
-
+  const address = wallet.address ?? (signer?.address as string | undefined);
 
   if (!address) {
     return null;
   }
 
+  const avatarUrl = `https://avatar.tobi.sh/${address}`;
+  const displayWalletName = wallet.walletName ?? "Solana Wallet";
+
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      <p className="shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
-        {signer?.publicKey.toBase58()}
-      </p>
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <span className="hidden sm:inline-block shrink-0 font-mono text-xs tabular-nums text-muted-foreground bg-muted/60 px-2 py-1 rounded border border-border">
+        {shortenAddress(address, 4)}
+      </span>
+
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="inline-flex size-8 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-border focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="inline-flex size-8 shrink-0 overflow-hidden rounded-full bg-muted ring-1 ring-border focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none cursor-pointer"
           aria-label="Account menu"
         >
-          <Image
-            src={`https://avatar.tobi.sh/${signer?.publicKey.toBase58()}`}
-            alt=""
-            className="size-8 rounded-full"
-          />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-56 w-64 p-1">
-          <div className="flex items-center gap-2 px-2 py-2">
+          {wallet.walletIcon ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={wallet.walletIcon}
+              alt={displayWalletName}
+              className="size-8 rounded-full p-1"
+            />
+          ) : (
             <Image
-              src={`https://avatar.tobi.sh/${signer?.publicKey.toBase58()}`}
+              src={avatarUrl}
               alt=""
-              className="size-8 rounded-full" />
+              width={32}
+              height={32}
+              className="size-8 rounded-full"
+              unoptimized
+            />
+          )}
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="min-w-60 w-68 p-1">
+          <div className="flex items-center gap-2.5 px-2.5 py-2">
+            <Image
+              src={avatarUrl}
+              alt=""
+              width={36}
+              height={36}
+              className="size-9 rounded-full ring-1 ring-border"
+              unoptimized
+            />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">
-                {signer?.publicKey.toBase58()}
+              <p className="text-sm font-semibold text-foreground truncate">
+                {displayWalletName}
               </p>
               <p className="truncate font-mono text-xs text-muted-foreground">
-                {signer?.publicKey.toBase58()}
+                {shortenAddress(address, 6)}
               </p>
             </div>
           </div>
+
           <DropdownMenuSeparator />
+
           <DropdownMenuItem
-            className="min-h-10 gap-2"
-            aria-label={`Copy address ${signer?.publicKey.toBase58()}`}
+            className="min-h-9 gap-2 cursor-pointer"
+            aria-label={`Copy address ${address}`}
             onClick={() => copyText(address)}
           >
-            <Copy />
-            <span className="font-mono text-xs">{signer?.publicKey.toBase58()}</span>
+            <Copy className="size-4" />
+            <span className="font-mono text-xs truncate">Copy Address</span>
           </DropdownMenuItem>
+
           <DropdownMenuItem
-            className="min-h-10 gap-2"
+            className="min-h-9 gap-2 cursor-pointer"
             onClick={() =>
-              router.push("/settings")
+              window.open(
+                `https://solscan.io/account/${address}?cluster=devnet`,
+                "_blank",
+                "noopener,noreferrer"
+              )
             }
           >
-            <User />
-            Profile
+            <ExternalLink className="size-4" />
+            <span>View on Solscan</span>
           </DropdownMenuItem>
+
           <DropdownMenuItem
-            className="min-h-10 gap-2"
+            className="min-h-9 gap-2 cursor-pointer"
             onClick={() => router.push("/settings")}
           >
-            <Settings />
-            Settings
+            <User className="size-4" />
+            <span>Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+
           <DropdownMenuItem
-            className="min-h-10 gap-2"
+            className="min-h-9 gap-2 cursor-pointer"
+            onClick={() => router.push("/settings")}
+          >
+            <Settings className="size-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            className="min-h-9 gap-2 text-destructive focus:text-destructive cursor-pointer"
             onClick={() => {
               void wallet.logout();
             }}
           >
-            <LogOut />
-            Sign out
+            <LogOut className="size-4" />
+            <span>Disconnect</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

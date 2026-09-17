@@ -7,17 +7,19 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import type { DnsSigner } from "@/lib/wallet";
+
+export const LAMPORTS_PER_SOL = 1_000_000_000;
 
 function asSigner(
   wallet: ReturnType<typeof useDnsWallet>
 ): DnsSigner | null {
-  if (!wallet.publicKey || !wallet.connected) {
+  if (!wallet.address || !wallet.publicKey || !wallet.connected) {
     return null;
   }
   return {
+    address: wallet.address,
     publicKey: wallet.publicKey,
     signTransaction: wallet.signTransaction,
     signAllTransactions: wallet.signAllTransactions,
@@ -68,9 +70,9 @@ export function useAccount(): AccountValue {
   return ctx;
 }
 
-export function solAmount(lamports: number | null): number | null {
+export function solAmount(lamports: number | bigint | null): number | null {
   if (lamports == null) {
     return null;
   }
-  return lamports / LAMPORTS_PER_SOL;
+  return Number(lamports) / LAMPORTS_PER_SOL;
 }

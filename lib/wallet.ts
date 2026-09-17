@@ -1,15 +1,17 @@
-import {
-  Transaction,
-  VersionedTransaction,
-  type PublicKey,
-} from "@solana/web3.js";
+import type { Address } from "@solana/kit";
 
-export type DnsTx = Transaction | VersionedTransaction;
+export type DnsAddress = Address;
+
+export type DnsPublicKey = {
+  toBase58(): string;
+  toString(): string;
+};
 
 export type DnsSigner = {
-  publicKey: PublicKey;
-  signTransaction: <T extends DnsTx>(tx: T) => Promise<T>;
-  signAllTransactions: <T extends DnsTx>(txs: T[]) => Promise<T[]>;
+  address: Address;
+  publicKey: DnsPublicKey;
+  signTransaction: <T>(tx: T) => Promise<T>;
+  signAllTransactions: <T>(txs: T[]) => Promise<T[]>;
   signMessage: (message: Uint8Array) => Promise<Uint8Array>;
 };
 
@@ -18,14 +20,14 @@ export type DnsWallet = {
   connected: boolean;
   connecting: boolean;
   authenticated: boolean;
-  publicKey: PublicKey | null;
-  address: string | null;
-  walletId: string | null;
-  agentEnabled: boolean;
-  agentAvailable: boolean;
+  publicKey: DnsPublicKey | null;
+  address: Address | null;
+  walletName: string | null;
+  walletIcon: string | null;
   login: () => void;
+  openWalletModal: () => void;
+  closeWalletModal: () => void;
   logout: () => Promise<void>;
-  enableAgent: () => Promise<void>;
   signTransaction: DnsSigner["signTransaction"];
   signAllTransactions: DnsSigner["signAllTransactions"];
   signMessage: DnsSigner["signMessage"];
@@ -38,29 +40,5 @@ export function isSessionPending(wallet: DnsWallet): boolean {
 
 // True only after auth has settled and there is no session.
 export function isSignedOut(wallet: DnsWallet): boolean {
-  return wallet.ready && !wallet.connected && !wallet.authenticated;
-}
-
-export function isVersionedTx(tx: DnsTx): tx is VersionedTransaction {
-  return "version" in tx;
-}
-
-export function serializeUnsigned(tx: DnsTx): Uint8Array {
-  if (isVersionedTx(tx)) {
-    return tx.serialize();
-  }
-  return tx.serialize({
-    requireAllSignatures: false,
-    verifySignatures: false,
-  });
-}
-
-export function restoreSigned<T extends DnsTx>(
-  original: T,
-  signed: Uint8Array
-): T {
-  if (isVersionedTx(original)) {
-    return VersionedTransaction.deserialize(signed) as T;
-  }
-  return Transaction.from(signed) as T;
+  return wallet.ready && !wallet.connected;
 }

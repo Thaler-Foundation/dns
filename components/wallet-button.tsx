@@ -8,8 +8,7 @@ import { isSessionPending } from "@/lib/wallet";
 
 export function WalletButton() {
   const wallet = useDnsWallet();
-  const { ready, connected, connecting, address, login } = wallet;
-
+  const { ready, connected, connecting, address, openWalletModal } = wallet;
 
   if (connected && address) {
     return <WalletDrawer />;
@@ -33,9 +32,9 @@ export function WalletButton() {
       className="min-h-10 shrink-0 sm:min-h-7"
       disabled={!ready || connecting}
       aria-busy={connecting}
-      onClick={() => login()}
+      onClick={() => openWalletModal()}
     >
-      {connecting ? "Signing in" : "Sign in"}
+      {connecting ? "Connecting" : "Connect Wallet"}
     </Button>
   );
 }
