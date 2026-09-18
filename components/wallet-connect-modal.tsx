@@ -144,7 +144,7 @@ export function WalletConnectModal({
                   onClick={() => void handleWalletClick(mainWallet)}
                   disabled={isCurrentConnecting}
                   className={cn(
-                    "w-full text-left p-3.5 rounded-md border-2 border-primary/50 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all duration-150 flex items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "w-full text-left p-3.5 rounded-none border border-zinc-300 dark:border-white/20 bg-card hover:bg-muted/40 hover:border-zinc-500 dark:hover:border-white/40 transition-all duration-150 flex items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring relative before:content-[''] before:absolute before:inset-[3px] before:border before:border-zinc-300/80 dark:before:border-white/15 before:pointer-events-none hover:before:border-zinc-500/80 dark:hover:before:border-white/30",
                     isCurrentConnecting && "opacity-80 cursor-wait"
                   )}
                 >
@@ -162,7 +162,7 @@ export function WalletConnectModal({
                         <span className="font-semibold text-sm text-foreground">
                           {mainWallet.name}
                         </span>
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary text-primary-foreground tracking-wide uppercase">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-none text-[10px] font-mono font-medium bg-foreground text-background tracking-wider uppercase">
                           <Sparkles className="size-2.5" />
                           Main
                         </span>
@@ -175,7 +175,7 @@ export function WalletConnectModal({
 
                   <div className="flex items-center gap-2 shrink-0">
                     {isCurrentConnecting ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
+                      <span className="inline-flex items-center gap-1 text-xs text-foreground font-medium">
                         <Loader2 className="size-3.5 animate-spin" />
                         Connecting
                       </span>
@@ -224,7 +224,7 @@ export function WalletConnectModal({
                   onClick={() => void handleWalletClick(wallet)}
                   disabled={isCurrentConnecting}
                   className={cn(
-                    "w-full text-left px-3 py-2.5 rounded-md border border-border bg-card/60 hover:bg-muted/70 hover:border-border/80 transition-all duration-150 flex items-center justify-between gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "w-full text-left px-3 py-2.5 rounded-none border border-border bg-card/60 hover:bg-muted/70 hover:border-zinc-500 dark:hover:border-white/30 transition-all duration-150 flex items-center justify-between gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isCurrentConnecting && "opacity-80 cursor-wait"
                   )}
                 >

@@ -14,11 +14,6 @@ export default function Home() {
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-[500px] w-[680px] -translate-y-1/4 rounded-full bg-primary/4 blur-[120px] dark:bg-primary/8"
-        />
-
-        <div
-          aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.035)_1px,transparent_1px)] dark:bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:24px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"
         />
 

@@ -57,15 +57,16 @@ export function CookieBanner() {
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             type="button"
-            variant="outline"
-            className="h-11 min-w-40"
+            variant="framed"
+            className="h-10 min-w-36 text-xs font-sans tracking-wide"
             onClick={() => save(false)}
           >
             Necessary only
           </Button>
           <Button
             type="button"
-            className="h-11 min-w-40"
+            variant="framed"
+            className="h-10 min-w-36 text-xs font-sans tracking-wide"
             onClick={() => save(true)}
           >
             Allow analytics

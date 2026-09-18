@@ -21,7 +21,7 @@ export function TokenIcon({ symbol, size = 24, className }: TokenIconProps) {
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
         className
       )}
       style={{ width: size, height: size }}
@@ -31,7 +31,7 @@ export function TokenIcon({ symbol, size = 24, className }: TokenIconProps) {
         alt={`${symbol} token`}
         width={size}
         height={size}
-        className="size-full object-contain"
+        className="size-full object-contain rounded-full"
         priority
         unoptimized
       />

@@ -10,7 +10,7 @@ import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import { TOKENS, type TokenSymbol } from "@/lib/tokens";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function SwapCard() {
   const wallet = useDnsWallet();
@@ -315,23 +315,16 @@ export function SwapCard() {
         </div>
 
         <div className="mt-5">
-          <button
+          <Button
             type="button"
+            variant="framed"
+            size="lg"
             disabled={
               wallet.connected &&
               (isZeroOrEmpty || isInsufficient || isSwapping)
             }
             onClick={handleAction}
-            className={cn(
-              "h-12 w-full rounded-sm font-medium text-sm transition-colors",
-              !wallet.connected
-                ? "bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer active:translate-y-px"
-                : isInsufficient
-                ? "bg-muted text-destructive border border-destructive/20 cursor-not-allowed"
-                : isZeroOrEmpty
-                ? "bg-muted text-muted-foreground border border-border cursor-not-allowed"
-                : "bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer active:translate-y-px"
-            )}
+            className="h-12 w-full text-sm font-sans tracking-wide"
           >
             {!wallet.connected
               ? "Connect Wallet"
@@ -342,7 +335,7 @@ export function SwapCard() {
               : isSwapping
               ? "Swapping..."
               : `Swap ${sellToken} for ${buyToken}`}
-          </button>
+          </Button>
         </div>
       </div>
 

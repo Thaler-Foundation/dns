@@ -51,13 +51,13 @@ export function WalletDrawer() {
   return (
     <Drawer swipeDirection="right">
       <div className="flex min-w-0 items-center gap-2">
-        <DrawerTrigger className="inline-flex items-center gap-2 rounded-sm border border-border bg-card px-2.5 py-1 text-xs font-mono hover:bg-muted/60 active:translate-y-px transition-colors cursor-pointer">
+        <DrawerTrigger className="relative inline-flex items-center gap-2 rounded-none border border-zinc-300 dark:border-white/20 bg-card px-3 py-1.5 text-xs font-mono hover:bg-muted/40 hover:border-zinc-500 dark:hover:border-white/40 transition-all cursor-pointer before:content-[''] before:absolute before:inset-[2px] before:border before:border-zinc-300/80 dark:before:border-white/15 before:pointer-events-none">
           <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
           <span className="text-foreground">{truncateAddress(address, 4)}</span>
         </DrawerTrigger>
       </div>
 
-      <DrawerContent className="rounded-none sm:rounded-l-sm border-y-0 border-r-0 border-l border-border bg-card text-card-foreground shadow-none sm:max-w-md w-full p-0">
+      <DrawerContent className="rounded-none sm:rounded-l-none border-y-0 border-r-0 border-l border-border bg-card text-card-foreground shadow-none sm:max-w-md w-full p-0">
         <DrawerHeader className="border-b border-border p-4 flex flex-row items-center justify-between space-y-0">
           <DrawerTitle className="sr-only">Wallet Details</DrawerTitle>
           <div className="flex items-center gap-2.5">
@@ -83,7 +83,7 @@ export function WalletDrawer() {
             <button
               type="button"
               onClick={() => wallet.logout()}
-              className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              className="relative inline-flex items-center gap-1.5 rounded-none border border-zinc-300 dark:border-white/20 bg-card px-2.5 py-1 text-xs font-sans text-destructive hover:bg-destructive/10 transition-colors before:content-[''] before:absolute before:inset-[2px] before:border before:border-zinc-300/60 dark:before:border-white/10 before:pointer-events-none"
             >
               <LogOut className="size-3" />
               <span>Disconnect</span>

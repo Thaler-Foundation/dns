@@ -28,8 +28,9 @@ export function WalletButton() {
 
   return (
     <Button
+      variant="framed"
       size="sm"
-      className="min-h-10 shrink-0 sm:min-h-7"
+      className="h-8.5 px-3.5 text-xs shrink-0 tracking-wide font-sans"
       disabled={!ready || connecting}
       aria-busy={connecting}
       onClick={() => openWalletModal()}
