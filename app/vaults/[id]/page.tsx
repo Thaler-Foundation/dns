@@ -1,21 +1,18 @@
 "use client";
 
-import { use, useState, Suspense } from "react";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { TokenIcon } from "@/components/token-icons";
+import { Button } from "@/components/ui/button";
+import { StockIcon, TokenizedStockBadge, VaultPairBadge } from "@/components/vaults/stock-icons";
+import { VaultDepositModal } from "@/components/vaults/vault-deposit-modal";
+import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
+import {
+  ArrowLeft
+} from "lucide-react";
 import Link from "next/link";
 import { notFound, useSearchParams } from "next/navigation";
-import { getVaultById } from "@/lib/vaults-data";
-import { VaultPairBadge, StockIcon } from "@/components/vaults/stock-icons";
-import { TokenIcon } from "@/components/token-icons";
-import { VaultDepositModal } from "@/components/vaults/vault-deposit-modal";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  ShieldCheck,
-  RotateCcw,
-  Zap,
-} from "lucide-react";
+import { Suspense, use, useState } from "react";
 
 function VaultDetailContent({ id }: { id: string }) {
   const searchParams = useSearchParams();
@@ -27,6 +24,8 @@ function VaultDetailContent({ id }: { id: string }) {
   if (!vault) {
     return notFound();
   }
+
+  const hasTokenized = hasTokenizedStock(vault);
 
   return (
     <div className="relative z-10 mx-auto w-full max-w-3xl space-y-5">
@@ -40,7 +39,7 @@ function VaultDetailContent({ id }: { id: string }) {
         </Link>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <VaultPairBadge
             stock1={vault.stock1}
@@ -49,16 +48,17 @@ function VaultDetailContent({ id }: { id: string }) {
             size={32}
           />
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                 {vault.displayName}
               </h1>
               <span className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-muted text-muted-foreground border border-border">
                 {vault.category}
               </span>
+              {hasTokenized && <TokenizedStockBadge text="Tokenized Stocks (xStocks)" />}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Dual long & short market-neutral strategy across {vault.stock1} and {vault.stock2}
+              {vault.description}
             </p>
           </div>
         </div>
@@ -69,14 +69,7 @@ function VaultDetailContent({ id }: { id: string }) {
             <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
               {vault.apy.toFixed(2)}%
             </span>
-          </div>
-          <div className="border-l border-border pl-4">
-            <span className="text-[11px] text-muted-foreground block font-mono">Strategy Beta</span>
-            <span className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-foreground bg-muted/60 border border-border px-2 py-0.5 rounded-sm mt-0.5">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              0.00 β
-            </span>
-          </div>
+          </div> 
         </div>
       </div>
 
@@ -90,7 +83,7 @@ function VaultDetailContent({ id }: { id: string }) {
           </span>
         </div>
 
-        <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <TokenIcon symbol={vault.targetToken} size={36} />
             <div>
@@ -125,52 +118,55 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="flex items-center justify-between pb-3 border-b border-border/60">
           <div>
             <h2 className="text-sm font-semibold text-foreground tracking-tight">
-              Strategy Composition · Dual Long & Short
+              Dual Long & Short
             </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Simultaneous long and short positions on both equities eliminate directional exposure.
+              Simultaneous delta neutral positions on both equities eliminate directional exposure.
             </p>
           </div>
-          <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-sm shrink-0">
-            0.00 Net Beta
-          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-3 rounded-sm border border-border/70 bg-muted/20 space-y-2">
-            <div className="flex items-center gap-2">
-              <StockIcon ticker={vault.stock1} size={20} />
-              <span className="text-xs font-semibold text-foreground">
-                {vault.stock1} Position Pair
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <StockIcon ticker={vault.stock1} size={20} />
+                <span className="text-xs font-semibold text-foreground">
+                  {vault.stock1} Position Pair
+                </span>
+              </div>
+              {isTokenizedStock(vault.stock1) && <TokenizedStockBadge text="xStock" />}
             </div>
             <div className="space-y-1.5 pt-1 text-xs font-mono">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Long {vault.stock1}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">+25% Allocation</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Short {vault.stock1}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">-25% Allocation</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
               </div>
             </div>
           </div>
 
           <div className="p-3 rounded-sm border border-border/70 bg-muted/20 space-y-2">
-            <div className="flex items-center gap-2">
-              <StockIcon ticker={vault.stock2} size={20} />
-              <span className="text-xs font-semibold text-foreground">
-                {vault.stock2} Position Pair
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <StockIcon ticker={vault.stock2} size={20} />
+                <span className="text-xs font-semibold text-foreground">
+                  {vault.stock2} Position Pair
+                </span>
+              </div>
+              {isTokenizedStock(vault.stock2) && <TokenizedStockBadge text="xStock" />}
             </div>
             <div className="space-y-1.5 pt-1 text-xs font-mono">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Long {vault.stock2}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">+25% Allocation</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Short {vault.stock2}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">-25% Allocation</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
               </div>
             </div>
           </div>
@@ -178,13 +174,13 @@ function VaultDetailContent({ id }: { id: string }) {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
           <div className="flex items-center gap-2">
-            <TokenIcon symbol={vault.targetToken} size={18} />
             <span className="text-muted-foreground">Underlying Collateral:</span>
-            <span className="font-medium text-foreground">100% {vault.targetToken}</span>
+            <span className="font-medium text-foreground">96% USDC</span>
           </div>
-          <span className="text-[11px] text-muted-foreground font-mono">
-            Zero borrow/lend debt · Principal fully isolated
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Liquidity Buffer:</span>
+            <span className="font-medium text-foreground">4% USDC</span>
+          </div>
         </div>
       </div>
 
@@ -211,9 +207,9 @@ function VaultDetailContent({ id }: { id: string }) {
         </div>
 
         <div className="rounded-sm border border-border bg-card p-3.5">
-          <span className="text-[11px] text-muted-foreground block font-mono">Performance Fee</span>
+          <span className="text-[11px] text-muted-foreground block font-mono">Service Fee</span>
           <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-            0.00%
+            11.00%
           </span>
         </div>
       </div>
@@ -226,7 +222,6 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
               Dual-Market Neutral
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">
@@ -237,7 +232,6 @@ function VaultDetailContent({ id }: { id: string }) {
 
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              <RotateCcw className="size-3.5 text-emerald-600 dark:text-emerald-400" />
               Automated Rebalance
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">
@@ -248,7 +242,6 @@ function VaultDetailContent({ id }: { id: string }) {
 
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              <Zap className="size-3.5 text-emerald-600 dark:text-emerald-400" />
               Principal Isolated
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">

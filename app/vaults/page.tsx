@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { VAULT_STRATEGIES, getTotalTvl, formatCurrency } from "@/lib/vaults-data";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { VaultCard } from "@/components/vaults/vault-card";
 import { VaultListRow } from "@/components/vaults/vault-list-row";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { LayoutGrid, List, Search, ArrowDownUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VAULT_STRATEGIES, formatCurrency, getTotalTvl } from "@/lib/vaults-data";
+import { ArrowDownUp, LayoutGrid, List, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 
 type ViewMode = "grid" | "list";
 type CategoryFilter = "All" | "High Yield" | "Semiconductors" | "Tech Mega-cap" | "Cloud";
@@ -35,7 +35,12 @@ export default function VaultsPage() {
         vault.displayName.toLowerCase().includes(q) ||
         vault.stock1.toLowerCase().includes(q) ||
         vault.stock2.toLowerCase().includes(q) ||
-        vault.pairName.toLowerCase().includes(q);
+        vault.stock1.toLowerCase().replace(/x$/, "").includes(q) ||
+        vault.stock2.toLowerCase().replace(/x$/, "").includes(q) ||
+        vault.pairName.toLowerCase().includes(q) ||
+        vault.description.toLowerCase().includes(q) ||
+        q.includes("token") ||
+        q.includes("xstock");
 
       return matchesCategory && matchesSearch;
     }).sort((a, b) => {
@@ -56,11 +61,17 @@ export default function VaultsPage() {
         <div className="relative z-10 mx-auto w-full max-w-4xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-border">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
-                Smart Vaults
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
+                  Smart Vaults
+                </h1>
+                <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                  <span className="size-1.5 rounded-full bg-emerald-500" />
+                  xStocks Active
+                </span>
+              </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-lg">
-                Automated delta-neutral equity yield on Solana. Dual long/short hedging
+                Automated delta-neutral yield on Solana using tokenized stocks (xStocks). Dual long/short hedging
                 with 100% tDNS collateral.
               </p>
             </div>

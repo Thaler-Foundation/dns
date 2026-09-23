@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { VaultPairBadge } from "@/components/vaults/stock-icons";
-import { type VaultStrategy } from "@/lib/vaults-data";
+import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
+import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
   vault: VaultStrategy;
@@ -11,6 +11,7 @@ interface VaultCardProps {
 
 export function VaultCard({ vault }: VaultCardProps) {
   const router = useRouter();
+  const hasTokenized = hasTokenizedStock(vault);
 
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,19 +33,16 @@ export function VaultCard({ vault }: VaultCardProps) {
               size={22}
             />
             <div className="min-w-0">
-              <h3 className="font-semibold text-sm tracking-tight text-foreground truncate">
-                {vault.displayName}
-              </h3>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-semibold text-sm tracking-tight text-foreground truncate">
+                  {vault.displayName}
+                </h3>
+                {hasTokenized && <TokenizedStockBadge />}
+              </div>
               <p className="text-[11px] text-muted-foreground truncate">
                 Dual Long & Short · {vault.stock1} & {vault.stock2}
               </p>
             </div>
-          </div>
-          <div className="flex items-center shrink-0">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-foreground bg-muted/60 border border-border px-2 py-0.5 rounded-sm">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              0.00 β
-            </span>
           </div>
         </div>
 

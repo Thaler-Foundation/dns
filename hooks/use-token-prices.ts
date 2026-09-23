@@ -11,8 +11,8 @@ export interface TokenPriceInfo {
 
 const DEFAULT_PRICES: Record<TokenSymbol, TokenPriceInfo> = {
   SOL: { usdPrice: 101.47, priceChange24h: 3.73 },
-  USDC: { usdPrice: 0.9996, priceChange24h: -0.01 },
-  tDNS: { usdPrice: 1.0, priceChange24h: 0.0 },
+  USDC: { usdPrice: 1.0, priceChange24h: 0.0 },
+  tDNS: { usdPrice: 100.0, priceChange24h: 0.0 },
 };
 
 function formatPrices(
@@ -37,18 +37,12 @@ function formatPrices(
     };
   }
 
-  const tDnsData = res[TOKENS.tDNS.priceMint];
-  if (tDnsData?.usdPrice) {
-    next.tDNS = {
-      usdPrice: tDnsData.usdPrice,
-      priceChange24h: tDnsData.priceChange24h ?? 0,
-    };
-  } else {
-    next.tDNS = {
-      usdPrice: next.USDC.usdPrice,
-      priceChange24h: 0,
-    };
-  }
+  // 1 tDNS = 100 USDC
+  const usdcPrice = next.USDC?.usdPrice ?? 1.0;
+  next.tDNS = {
+    usdPrice: usdcPrice * 100,
+    priceChange24h: next.USDC?.priceChange24h ?? 0,
+  };
 
   return next;
 }
@@ -117,6 +111,9 @@ export function useTokenPrices(pollIntervalMs = 20_000) {
   const getExchangeRate = useCallback(
     (from: TokenSymbol, to: TokenSymbol): number => {
       if (from === to) return 1;
+      // Fixed peg: 1 tDNS = 100 USDC
+      if (from === "tDNS" && to === "USDC") return 100;
+      if (from === "USDC" && to === "tDNS") return 0.01;
       const fromUsd = prices[from]?.usdPrice ?? 1;
       const toUsd = prices[to]?.usdPrice ?? 1;
       if (toUsd === 0) return 0;
