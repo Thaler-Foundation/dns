@@ -1,0 +1,6 @@
+{
+  "name": "stDNS MUx/TSLAx",
+  "symbol": "stMUTSLA",
+  "description": "Thaler DNS vault share for the MUx/TSLAx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/mux-tslax-tdns.png"
+}

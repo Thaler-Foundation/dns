@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { STOCKS, type StockTicker, getStockColor } from "@/lib/vaults-data";
+import { STOCKS, type StockTicker } from "@/lib/vaults-data";
 import { TokenIcon } from "@/components/token-icons";
 import {
   Tooltip,
@@ -129,6 +129,10 @@ export function TokenizedStockBadge({
   );
 }
 
+export function stDnsIconPath(stock1: StockTicker, stock2: StockTicker): string {
+  return `/tokens/stdns/${stock1.toLowerCase()}-${stock2.toLowerCase()}-tdns.svg`;
+}
+
 export function StDnsTokenIcon({
   stock1,
   stock2,
@@ -140,16 +144,24 @@ export function StDnsTokenIcon({
   size?: number;
   className?: string;
 }) {
-  const stock1Color = getStockColor(stock1, "#333333");
-  const stock2Color = getStockColor(stock2, "#EF0027");
-
   return (
-    <TokenIcon
-      symbol="tDNS"
-      size={size}
-      className={className}
-      colors={`${stock1Color}-${stock2Color}`}
-    />
+    <span
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
+        className
+      )}
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src={stDnsIconPath(stock1, stock2)}
+        alt={`stDNS-${stock1}${stock2} token`}
+        width={size}
+        height={size}
+        className="size-full object-contain rounded-full"
+        priority
+        unoptimized
+      />
+    </span>
   );
 }
 
@@ -162,9 +174,6 @@ export function StDnsBadge({
   stock2: StockTicker;
   className?: string;
 }) {
-  const stock1Color = getStockColor(stock1, "#333333");
-  const stock2Color = getStockColor(stock2, "#EF0027");
-
   return (
     <div
       className={cn(
@@ -172,11 +181,7 @@ export function StDnsBadge({
         className
       )}
     >
-      <TokenIcon
-        symbol="tDNS"
-        size={20}
-        colors={`${stock1Color}-${stock2Color}`}
-      />
+      <StDnsTokenIcon stock1={stock1} stock2={stock2} size={20} />
       <span className="font-semibold text-xs tracking-tight">
         stDNS-{stock1}{stock2}
       </span>

@@ -1,0 +1,6 @@
+{
+  "name": "stDNS MSFTx/MUx",
+  "symbol": "stMSFTMU",
+  "description": "Thaler DNS vault share for the MSFTx/MUx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/msftx-mux-tdns.png"
+}

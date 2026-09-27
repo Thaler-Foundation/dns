@@ -2,10 +2,13 @@
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { TokenIcon } from "@/components/token-icons";
 import { Button } from "@/components/ui/button";
-import { StockIcon, TokenizedStockBadge, VaultPairBadge } from "@/components/vaults/stock-icons";
+import { StDnsTokenIcon, StockIcon, TokenizedStockBadge, VaultPairBadge } from "@/components/vaults/stock-icons";
 import { VaultDepositModal } from "@/components/vaults/vault-deposit-modal";
+import { VaultRedeemModal } from "@/components/vaults/vault-redeem-modal";
+import { useDns } from "@/hooks/use-dns";
+import { useDnsWallet } from "@/hooks/use-dns-wallet";
+import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 import {
   ArrowLeft
@@ -20,6 +23,16 @@ function VaultDetailContent({ id }: { id: string }) {
   const vault = getVaultById(id);
 
   const [isDepositOpen, setIsDepositOpen] = useState(action === "deposit");
+  const [isRedeemOpen, setIsRedeemOpen] = useState(false);
+  const wallet = useDnsWallet();
+  const dns = useDns();
+  const info = vault ? dns.vaults[vault.id] : undefined;
+  const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
+  const position = wallet.connected && held ? held.atoms : BigInt(0);
+  const positionUsdc = info ? assetsForShares(position, info.navUsdc, info.shareSupply) : BigInt(0);
+  const refreshPosition = () => {
+    void dns.refresh();
+  };
 
   if (!vault) {
     return notFound();
@@ -85,12 +98,14 @@ function VaultDetailContent({ id }: { id: string }) {
 
         <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <TokenIcon symbol={vault.targetToken} size={36} />
+            <StDnsTokenIcon stock1={vault.stock1} stock2={vault.stock2} size={36} />
             <div>
               <p className="text-2xl font-bold font-mono text-foreground">
-                0.00 {vault.targetToken}
+                {formatAtoms(position, STDNS_DECIMALS, 6)} stDNS
               </p>
-              <p className="text-xs font-mono text-muted-foreground">$0.00 USD</p>
+              <p className="text-xs font-mono text-muted-foreground">
+                {formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC
+              </p>
             </div>
           </div>
 
@@ -104,8 +119,9 @@ function VaultDetailContent({ id }: { id: string }) {
             </Button>
             <Button
               variant="framed"
-              disabled
-              title="No active position to withdraw"
+              disabled={position <= BigInt(0) || !info || !dns.mints}
+              title={position <= BigInt(0) ? "No active position to withdraw" : undefined}
+              onClick={() => setIsRedeemOpen(true)}
               className="h-9 px-4 font-sans font-medium tracking-wide disabled:opacity-40 disabled:pointer-events-none"
             >
               Withdraw
@@ -232,21 +248,21 @@ function VaultDetailContent({ id }: { id: string }) {
 
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              Automated Rebalance
+              Share-Matched Hedge
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">
-              Positions re-peg to 0.00 beta whenever spread divergence exceeds ±1.5%,
-              harvesting volatility and funding rate spreads.
+              Each short is sized to the number of shares the vault holds and is resized when a
+              dividend changes that count. Income comes from funding paid to shorts and from dividends.
             </p>
           </div>
 
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              Principal Isolated
+              Fully Margined Shorts
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">
-              No borrow debt or liquidation thresholds exist. Principal is 100% held
-              in {vault.targetToken} with zero lockup penalty on withdrawals.
+              Each short is backed by USDC margin equal to its full size, so positions start at 1x
+              with no borrowing. Phoenix can still liquidate a short if its margin runs out.
             </p>
           </div>
         </div>
@@ -256,7 +272,19 @@ function VaultDetailContent({ id }: { id: string }) {
         vault={vault}
         open={isDepositOpen}
         onOpenChange={setIsDepositOpen}
+        onDeposited={refreshPosition}
       />
+      {info && dns.mints && (
+        <VaultRedeemModal
+          vault={vault}
+          info={info}
+          mints={dns.mints}
+          balance={position}
+          open={isRedeemOpen}
+          onOpenChange={setIsRedeemOpen}
+          onRedeemed={refreshPosition}
+        />
+      )}
     </div>
   );
 }

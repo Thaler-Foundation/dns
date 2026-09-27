@@ -11,11 +11,17 @@ import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import { TOKENS, type TokenSymbol } from "@/lib/tokens";
 import { Button } from "@/components/ui/button";
+import { useDns } from "@/hooks/use-dns";
+import { useDnsSend } from "@/hooks/use-dns-send";
+import { burnTdnsIxs, mintTdnsIxs } from "@/lib/dns/tx";
+import { formatAtoms, parseAtoms, tdnsToUsdcAtoms, usdcToTdnsAtoms } from "@/lib/dns/math";
 
 export function SwapCard() {
   const wallet = useDnsWallet();
   const { balances, refreshBalances } = useTokenBalances();
   const { prices, getExchangeRate } = useTokenPrices();
+  const dns = useDns();
+  const sendDns = useDnsSend();
 
   const [sellToken, setSellToken] = useState<TokenSymbol>("USDC");
   const [buyToken, setBuyToken] = useState<TokenSymbol>("tDNS");
@@ -127,6 +133,16 @@ export function SwapCard() {
   const sellNum = parseFloat(sellAmount);
   const isZeroOrEmpty = !sellAmount || isNaN(sellNum) || sellNum <= 0;
   const isInsufficient = wallet.connected && sellNum > sellBalance;
+  const direction =
+    sellToken === "USDC" && buyToken === "tDNS"
+      ? "mint"
+      : sellToken === "tDNS" && buyToken === "USDC"
+      ? "burn"
+      : null;
+  const sellAtoms = parseAtoms(sellAmount, TOKENS[sellToken].decimals);
+  const tdnsAtoms =
+    sellAtoms === null ? BigInt(0) : direction === "mint" ? usdcToTdnsAtoms(sellAtoms) : sellAtoms;
+  const unsupported = direction === null || dns.mints === null || tdnsAtoms === BigInt(0);
 
   const handleSelectToken = (selected: TokenSymbol) => {
     if (dialogTarget === "sell") {
@@ -151,22 +167,28 @@ export function SwapCard() {
       return;
     }
 
-    if (isZeroOrEmpty || isInsufficient) return;
+    if (isZeroOrEmpty || isInsufficient || unsupported || !wallet.address || !dns.mints) return;
 
     setIsSwapping(true);
     try {
-      toast.info(
-        `Initiating swap: ${sellAmount} ${sellToken} for ${buyAmount} ${buyToken}...`
-      );
-      await new Promise((res) => setTimeout(res, 1400));
+      const ixs =
+        direction === "mint"
+          ? await mintTdnsIxs(wallet.address, dns.mints, tdnsAtoms)
+          : await burnTdnsIxs(wallet.address, dns.mints, tdnsAtoms);
+      const signature = await sendDns(ixs);
+      const usdc = formatAtoms(tdnsToUsdcAtoms(tdnsAtoms), 6);
+      const tdns = formatAtoms(tdnsAtoms, 6);
       toast.success(
-        `Swapped ${sellAmount} ${sellToken} for ${buyAmount} ${buyToken}`
+        direction === "mint"
+          ? `Minted ${tdns} tDNS for ${usdc} USDC`
+          : `Burned ${tdns} tDNS for ${usdc} USDC`,
+        { description: signature }
       );
       setSellAmount("");
       setBuyAmount("");
       refreshBalances();
-    } catch {
-      toast.error("Failed to execute swap");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Transaction failed");
     } finally {
       setIsSwapping(false);
     }
@@ -321,7 +343,7 @@ export function SwapCard() {
             size="lg"
             disabled={
               wallet.connected &&
-              (isZeroOrEmpty || isInsufficient || isSwapping)
+              (isZeroOrEmpty || isInsufficient || isSwapping || unsupported)
             }
             onClick={handleAction}
             className="h-12 w-full text-sm font-sans tracking-wide"
@@ -332,9 +354,17 @@ export function SwapCard() {
               ? `Insufficient ${sellToken} balance`
               : isZeroOrEmpty
               ? "Enter an amount"
+              : direction === null
+              ? "Only USDC and tDNS convert on devnet"
+              : dns.mints === null
+              ? "DNS devnet unavailable"
+              : tdnsAtoms === BigInt(0)
+              ? "Amount below 0.000001 tDNS"
               : isSwapping
               ? "Swapping..."
-              : `Swap ${sellToken} for ${buyToken}`}
+              : direction === "mint"
+              ? `Mint ${formatAtoms(tdnsAtoms, 6)} tDNS`
+              : `Burn ${formatAtoms(tdnsAtoms, 6)} tDNS`}
           </Button>
         </div>
       </div>

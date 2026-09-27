@@ -1,0 +1,6 @@
+{
+  "name": "stDNS INTCx/METAx",
+  "symbol": "stINTCMETA",
+  "description": "Thaler DNS vault share for the INTCx/METAx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/intcx-metax-tdns.png"
+}
