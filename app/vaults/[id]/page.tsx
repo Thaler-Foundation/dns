@@ -9,7 +9,54 @@ import { VaultRedeemModal } from "@/components/vaults/vault-redeem-modal";
 import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
+import { legFigures, type LegFigures } from "@/lib/dns/hedge";
+import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
+
+function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures | null; leg: DnsHedgeLeg | null }) {
+  if (!figures || !leg) {
+    return (
+      <>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Long {stock}</span>
+          <span className="font-semibold text-muted-foreground">24% target, no position yet</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Short {stock}</span>
+          <span className="font-semibold text-muted-foreground">24% target, no position yet</span>
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <div className="flex items-center justify-between" data-leg-long={stock}>
+        <span className="text-muted-foreground">Long {stock}</span>
+        <span className="font-semibold text-foreground">{figures.longShares} sh ({formatAtoms(figures.longUsdc, USDC_DECIMALS, 2)} USDC)</span>
+      </div>
+      <div className="flex items-center justify-between" data-leg-short={stock}>
+        <span className="text-muted-foreground">Short {stock}</span>
+        <span className="font-semibold text-foreground">{figures.shortShares} sh ({formatAtoms(figures.shortUsdc, USDC_DECIMALS, 2)} USDC)</span>
+      </div>
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-muted-foreground">Mark {figures.markUsdc} USDC, margin {formatAtoms(leg.collateral, USDC_DECIMALS, 2)}</span>
+        <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+          {figures.unrealised < BigInt(0) ? "" : "+"}{formatAtoms(figures.unrealised, USDC_DECIMALS, 2)} unrealised, +{formatAtoms(leg.fundingReceived, USDC_DECIMALS, 2)} funding
+        </span>
+      </div>
+    </>
+  );
+}
+
+function hedgeFigures(info: DnsVaultInfo | undefined, side: "a" | "b"): { figures: LegFigures | null; leg: DnsHedgeLeg | null } {
+  if (!info?.hedge) return { figures: null, leg: null };
+  const leg = info.hedge.legs[side];
+  const params =
+    side === "a"
+      ? { tickSize: info.params.tickSizeA, baseLotDecimals: info.params.baseLotDecimalsA, spotDecimals: info.params.spotDecimalsA }
+      : { tickSize: info.params.tickSizeB, baseLotDecimals: info.params.baseLotDecimalsB, spotDecimals: info.params.spotDecimalsB };
+  return { figures: legFigures(leg, info.hedge.marks[side], params), leg };
+}
 import {
   ArrowLeft
 } from "lucide-react";
@@ -154,14 +201,7 @@ function VaultDetailContent({ id }: { id: string }) {
               {isTokenizedStock(vault.stock1) && <TokenizedStockBadge text="xStock" />}
             </div>
             <div className="space-y-1.5 pt-1 text-xs font-mono">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Long {vault.stock1}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Short {vault.stock1}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
+              <LegLines stock={vault.stock1} {...hedgeFigures(info, "a")} />
             </div>
           </div>
 
@@ -176,18 +216,17 @@ function VaultDetailContent({ id }: { id: string }) {
               {isTokenizedStock(vault.stock2) && <TokenizedStockBadge text="xStock" />}
             </div>
             <div className="space-y-1.5 pt-1 text-xs font-mono">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Long {vault.stock2}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Short {vault.stock2}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
+              <LegLines stock={vault.stock2} {...hedgeFigures(info, "b")} />
             </div>
           </div>
         </div>
 
+        {info?.hedge && (
+          <p className="text-[11px] font-mono text-muted-foreground" data-hedge-slot={info.hedge.mainnetSlot}>
+            Hedge mirrored from mainnet Phoenix at the live mark plus the taker fee (mainnet slot {info.hedge.mainnetSlot.toLocaleString("en-US")}, read {new Date(info.hedge.capturedAtMs).toISOString().slice(11, 19)} UTC)
+            {info.groupsInFlight > BigInt(0) ? "; a stake group is settling" : ""}
+          </p>
+        )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Underlying Collateral:</span>

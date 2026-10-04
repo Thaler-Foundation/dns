@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { StDnsTokenIcon } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
-import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms } from "@/lib/dns/math";
+import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import type { DnsPendingStatus } from "@/lib/dns/stake";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 
@@ -17,6 +17,13 @@ const PENDING_STATUS: Record<DnsPendingStatus, string> = {
   settling: "Priced, settling",
   refunding: "Refunding tDNS",
 };
+
+const SLOT_MS = 400;
+
+function cooldownText(slotsLeft: bigint): string {
+  const minutes = Math.ceil((Number(slotsLeft) * SLOT_MS) / 60_000);
+  return minutes <= 1 ? "under a minute left" : `about ${minutes} min left`;
+}
 
 export default function PositionsPage() {
   const wallet = useDnsWallet();
@@ -29,6 +36,9 @@ export default function PositionsPage() {
   const pending = dns.pending
     .map((q) => ({ q, v: byId.get(q.vaultId) }))
     .filter((r): r is { q: (typeof dns.pending)[number]; v: NonNullable<typeof r.v> } => Boolean(r.v));
+  const redeems = dns.redeems
+    .map((q) => ({ q, v: byId.get(q.vaultId), info: dns.vaults[q.vaultId] }))
+    .filter((r): r is { q: (typeof dns.redeems)[number]; v: NonNullable<typeof r.v>; info: NonNullable<typeof r.info> } => Boolean(r.v && r.info));
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-background selection:bg-primary/20">
@@ -56,7 +66,7 @@ export default function PositionsPage() {
             <div className="rounded-sm border border-border bg-card p-6 text-center text-sm text-muted-foreground">
               Loading positions...
             </div>
-          ) : rows.length === 0 && pending.length === 0 ? (
+          ) : rows.length === 0 && pending.length === 0 && redeems.length === 0 ? (
             <div className="rounded-sm border border-border bg-card p-6 flex flex-col items-center gap-4 text-center">
               <p className="text-sm text-muted-foreground">You have no vault positions yet.</p>
               <Link href="/vaults" className="text-xs font-medium text-foreground underline underline-offset-4">
@@ -132,6 +142,35 @@ export default function PositionsPage() {
                             {q.status === "refunding"
                               ? "tDNS returns to your wallet"
                               : `${q.sharesExact ? "" : "~"}${formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS${q.sharesExact ? "" : " (estimate)"}`}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {redeems.length > 0 && (
+                <div className="space-y-2">
+                  <h2 className="text-sm font-semibold text-foreground">Pending withdrawals</h2>
+                  <div className="rounded-sm border border-border bg-card divide-y divide-border">
+                    {redeems.map(({ q, v, info }) => (
+                      <div key={q.request} data-redeem={v.id} className="flex items-center justify-between gap-4 p-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <StDnsTokenIcon stock1={v.stock1} stock2={v.stock2} size={32} />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">{v.displayName}</p>
+                            <p className="text-xs font-mono text-muted-foreground">
+                              {formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS (~{formatAtoms(assetsForShares(q.shares, info.navUsdc, info.shareSupply), USDC_DECIMALS, 2)} USDC at the published NAV)
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs font-medium text-foreground" data-redeem-status={q.status}>
+                            {q.status === "cooling" ? "Cooling down" : "Settling"}
+                          </p>
+                          <p className="text-xs font-mono text-muted-foreground">
+                            {q.status === "cooling" ? cooldownText(q.slotsLeft) : "the keeper pays it on its next tick"}
                           </p>
                         </div>
                       </div>

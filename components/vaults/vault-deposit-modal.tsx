@@ -27,7 +27,7 @@ import { requestStakeIxs } from "@/lib/dns/tx";
 import { readStakeTarget } from "@/lib/dns/stake";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { STDNS_DECIMALS, TDNS_DECIMALS, formatAtoms, parseAtoms, sharesForAssets, tdnsToUsdcAtoms } from "@/lib/dns/math";
+import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, sharesForAssets, tdnsToUsdcAtoms } from "@/lib/dns/math";
 
 interface VaultDepositModalProps {
   vault: VaultStrategy;
@@ -58,6 +58,11 @@ export function VaultDepositModal({
       ? sharesForAssets(tdnsToUsdcAtoms(tdnsAtoms), info.navUsdc, info.shareSupply)
       : BigInt(0);
   const hasTokenized = hasTokenizedStock(vault);
+  const minStake = dns.mixer?.minStakeTdns ?? BigInt(0);
+  const belowMin = tdnsAtoms > BigInt(0) && tdnsAtoms < minStake;
+  const room = info && dns.mixer ? dns.mixer.vaultCapUsdc - info.navUsdc - info.pendingStakeUsdc : null;
+  const roomLeft = room === null ? null : room > BigInt(0) ? room : BigInt(0);
+  const overCap = roomLeft !== null && tdnsToUsdcAtoms(tdnsAtoms) > roomLeft;
 
   const tdnsUsd = prices.tDNS?.usdPrice ?? 100;
   const usdcEquivalent = (numericAmount: number) =>
@@ -78,7 +83,7 @@ export function VaultDepositModal({
       wallet.login();
       return;
     }
-    if (tdnsAtoms <= BigInt(0) || !info || !dns.mints) return;
+    if (tdnsAtoms <= BigInt(0) || !info || !dns.mints || belowMin || overCap) return;
     setIsSubmitting(true);
     try {
       const target = await readStakeTarget(info.vault, async (a) => {
@@ -287,7 +292,7 @@ export function VaultDepositModal({
             onClick={handleDeposit}
             disabled={
               wallet.connected &&
-              (tdnsAtoms <= BigInt(0) || numericAmount > userBalance || isSubmitting || !info || !dns.mints)
+              (tdnsAtoms <= BigInt(0) || numericAmount > userBalance || isSubmitting || !info || !dns.mints || belowMin || overCap)
             }
             className="w-full h-11 font-sans font-medium text-sm tracking-wide disabled:opacity-40"
           >
@@ -295,12 +300,21 @@ export function VaultDepositModal({
               ? "Connect Wallet"
               : !info || !dns.mints
               ? "Vault not live on devnet"
+              : belowMin
+              ? `Minimum ${formatAtoms(minStake, TDNS_DECIMALS)} tDNS`
+              : overCap
+              ? "Exceeds the vault's remaining capacity"
               : isSubmitting
               ? "Requesting..."
               : "Deposit tDNS"}
           </Button>
+          {dns.mixer && roomLeft !== null && (
+            <p className="text-[11px] font-mono text-muted-foreground text-center" data-room-left={roomLeft.toString()} data-min-stake={minStake.toString()}>
+              Minimum {formatAtoms(minStake, TDNS_DECIMALS)} tDNS. Room left: {formatAtoms(roomLeft, USDC_DECIMALS, 2)} of {formatAtoms(dns.mixer.vaultCapUsdc, USDC_DECIMALS, 0)} USDC.
+            </p>
+          )}
           <p className="text-[11px] text-muted-foreground text-center">
-            Your tDNS is priced with its group at the next NAV publish and settled to stDNS automatically; until then it shows as pending on My Positions.
+            Your tDNS is hedged on both legs at the mirrored mainnet mark, priced with its group and settled to stDNS automatically; until then it shows as pending on My Positions.
           </p>
 
           <div className="rounded-sm border border-border bg-background/50 p-3 space-y-2.5 text-xs">

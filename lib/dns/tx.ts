@@ -136,6 +136,31 @@ export async function redeemIxs(
   ];
 }
 
+export async function requestRedeemIxs(
+  user: Address,
+  m: DnsMints,
+  vault: Address,
+  stdnsMint: Address,
+  stdnsEscrow: Address,
+  shares: bigint,
+): Promise<Instruction[]> {
+  const userUsdc = await findAta(user, m.usdcMint, TOKEN_PROGRAM);
+  const userStdns = await findAta(user, stdnsMint, TOKEN_2022_PROGRAM);
+  return [
+    createAtaIdempotent(user, userUsdc, user, m.usdcMint, TOKEN_PROGRAM),
+    await client.createRequestRedeemInstruction({
+      user,
+      vault,
+      stdnsMint,
+      userStdns,
+      stdnsEscrow,
+      usdcMint: m.usdcMint,
+      userUsdc,
+      shares,
+    }),
+  ];
+}
+
 export function toWeb3Instruction(ix: Instruction): TransactionInstruction {
   return new TransactionInstruction({
     programId: new PublicKey(ix.programAddress),

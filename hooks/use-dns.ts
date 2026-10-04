@@ -16,16 +16,24 @@ import {
   type DnsPendingRequest,
 } from "@/lib/dns/stake";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
+import {
+  REDEEM_REQUEST_DISCRIMINATOR,
+  REDEEM_REQUEST_USER_OFFSET,
+  loadPendingRedeems,
+  type DnsPendingRedeem,
+} from "@/lib/dns/redeem";
 
 export type { DnsVaultInfo } from "@/lib/dns/load";
 export type { DnsPosition } from "@/lib/dns/positions";
 export type { DnsPendingRequest } from "@/lib/dns/stake";
+export type { DnsPendingRedeem } from "@/lib/dns/redeem";
 
 export type DnsState = DnsSnapshot & {
   loading: boolean;
   positions: DnsPosition[];
   positionsLoaded: boolean;
   pending: DnsPendingRequest[];
+  redeems: DnsPendingRedeem[];
   refresh: () => Promise<void>;
 };
 
@@ -33,12 +41,14 @@ const POLL_MS = 20_000;
 
 const empty: DnsState = {
   mints: null,
+  mixer: null,
   vaults: {},
   problems: DNS_CONFIG.problems,
   loading: true,
   positions: [],
   positionsLoaded: false,
   pending: [],
+  redeems: [],
   refresh: async () => {},
 };
 
@@ -49,10 +59,11 @@ export function DnsProvider({ children }: { children: ReactNode }) {
   const { publicKey } = useWallet();
   const owner = publicKey ? publicKey.toBase58() : null;
   const [loading, setLoading] = useState(true);
-  const [snapshot, setSnapshot] = useState<DnsSnapshot>({ mints: null, vaults: {}, problems: DNS_CONFIG.problems });
+  const [snapshot, setSnapshot] = useState<DnsSnapshot>({ mints: null, mixer: null, vaults: {}, problems: DNS_CONFIG.problems });
   const [positions, setPositions] = useState<DnsPosition[]>([]);
   const [positionsLoaded, setPositionsLoaded] = useState(false);
   const [pending, setPending] = useState<{ owner: string | null; list: DnsPendingRequest[] }>({ owner: null, list: [] });
+  const [redeems, setRedeems] = useState<{ owner: string | null; list: DnsPendingRedeem[] }>({ owner: null, list: [] });
   const ownerRef = useRef(owner);
   useEffect(() => {
     ownerRef.current = owner;
@@ -78,6 +89,7 @@ export function DnsProvider({ children }: { children: ReactNode }) {
       setPositions([]);
       setPositionsLoaded(false);
       setPending({ owner: null, list: [] });
+      setRedeems({ owner: null, list: [] });
       return;
     }
     const getMultiple = async (addrs: ReturnType<typeof address>[]) => {
@@ -112,6 +124,28 @@ export function DnsProvider({ children }: { children: ReactNode }) {
     } catch {
       return;
     }
+    try {
+      const slot = BigInt(await connection.getSlot("confirmed"));
+      const list = await loadPendingRedeems(
+        address(owner),
+        next.vaults,
+        async (o) => {
+          const found = await connection.getProgramAccounts(new PublicKey(PROGRAM_ADDRESS), {
+            commitment: "confirmed",
+            filters: [
+              { memcmp: { offset: 0, bytes: getBase58Decoder().decode(Uint8Array.of(REDEEM_REQUEST_DISCRIMINATOR)) } },
+              { memcmp: { offset: REDEEM_REQUEST_USER_OFFSET, bytes: o } },
+            ],
+          });
+          return found.map((f) => ({ address: address(f.pubkey.toBase58()), data: new Uint8Array(f.account.data) }));
+        },
+        next.mixer?.redeemCooldownSlots ?? BigInt(0),
+        slot,
+      );
+      if (ownerRef.current === owner) setRedeems({ owner, list });
+    } catch {
+      return;
+    }
   }, [connection, owner]);
 
   useEffect(() => {
@@ -129,7 +163,17 @@ export function DnsProvider({ children }: { children: ReactNode }) {
 
   return createElement(
     DnsContext.Provider,
-    { value: { ...snapshot, loading, positions, positionsLoaded, pending: pending.owner === owner ? pending.list : [], refresh } },
+    {
+      value: {
+        ...snapshot,
+        loading,
+        positions,
+        positionsLoaded,
+        pending: pending.owner === owner ? pending.list : [],
+        redeems: redeems.owner === owner ? redeems.list : [],
+        refresh,
+      },
+    },
     children,
   );
 }

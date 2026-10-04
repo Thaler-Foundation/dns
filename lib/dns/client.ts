@@ -79,7 +79,9 @@ function assertFinished(data: Uint8Array, offset: number): void {
 
 /* Constants */
 export const PROGRAM_ADDRESS = address("DL3PykXNCnS2oPQC9LQFV3PnMYXDkZGHLZ9LiFgpxnYe");
+export const MIRROR_VENUE_DISCRIMINATOR = new Uint8Array([7]);
 export const MIXER_POOL_DISCRIMINATOR = new Uint8Array([1]);
+export const REDEEM_REQUEST_DISCRIMINATOR = new Uint8Array([6]);
 export const STAKE_GROUP_DISCRIMINATOR = new Uint8Array([4]);
 export const STAKE_REQUEST_DISCRIMINATOR = new Uint8Array([5]);
 export const VAULT_DISCRIMINATOR = new Uint8Array([3]);
@@ -106,8 +108,44 @@ export const REQUEST_STAKE_INSTRUCTION_DISCRIMINATOR = new Uint8Array([22]);
 export const SETTLE_STAKE_INSTRUCTION_DISCRIMINATOR = new Uint8Array([23]);
 export const ABORT_STAKE_INSTRUCTION_DISCRIMINATOR = new Uint8Array([24]);
 export const SETTLE_GROUP_INSTRUCTION_DISCRIMINATOR = new Uint8Array([25]);
+export const REQUEST_REDEEM_INSTRUCTION_DISCRIMINATOR = new Uint8Array([26]);
+export const SETTLE_REDEEM_INSTRUCTION_DISCRIMINATOR = new Uint8Array([27]);
+export const SET_BACKUP_POOL_INSTRUCTION_DISCRIMINATOR = new Uint8Array([28]);
+export const FUND_VAULT_INSTRUCTION_DISCRIMINATOR = new Uint8Array([29]);
+export const INIT_MIRROR_INSTRUCTION_DISCRIMINATOR = new Uint8Array([30]);
+export const MIRROR_READS_INSTRUCTION_DISCRIMINATOR = new Uint8Array([31]);
+export const MIRROR_EXECUTE_LEG_INSTRUCTION_DISCRIMINATOR = new Uint8Array([32]);
+export const MIRROR_UNWIND_INSTRUCTION_DISCRIMINATOR = new Uint8Array([33]);
+export const MIRROR_RESIZE_INSTRUCTION_DISCRIMINATOR = new Uint8Array([34]);
+export const MIRROR_DEPLOY_UNDEPLOYED_INSTRUCTION_DISCRIMINATOR = new Uint8Array([35]);
 
 /* Interfaces */
+export interface MirrorVenue {
+  version: number;
+  bump: number;
+  vault: Address;
+  spot_raw_a: bigint;
+  short_lots_a: bigint;
+  virtual_quote_a: bigint;
+  collateral_a: bigint;
+  unsettled_funding_a: bigint;
+  funding_snapshot_a: bigint;
+  fees_paid_a: bigint;
+  funding_received_a: bigint;
+  spot_raw_b: bigint;
+  short_lots_b: bigint;
+  virtual_quote_b: bigint;
+  collateral_b: bigint;
+  unsettled_funding_b: bigint;
+  funding_snapshot_b: bigint;
+  fees_paid_b: bigint;
+  funding_received_b: bigint;
+  deployed_usdc_a: bigint;
+  deployed_usdc_b: bigint;
+  last_settlement_ts: bigint;
+  mainnet_slot: bigint;
+}
+
 export interface MixerPool {
   version: number;
   bump: number;
@@ -131,6 +169,21 @@ export interface MixerPool {
   redeem_cooldown_slots: bigint;
   legs_required: number;
   band_bps: number;
+  vault_cap_usdc: bigint;
+  backup_usdc_mint: Address;
+  backup_pool: Address;
+  mirror_enabled: number;
+  min_stake_tdns: bigint;
+}
+
+export interface RedeemRequest {
+  version: number;
+  bump: number;
+  vault: Address;
+  user: Address;
+  user_usdc: Address;
+  shares: bigint;
+  request_slot: bigint;
 }
 
 export interface StakeGroup {
@@ -217,6 +270,8 @@ export interface Vault {
   spot_slot: bigint;
   margin_slot: bigint;
   stdns_escrow: Address;
+  redeem_escrow_shares: bigint;
+  groups_in_flight: bigint;
 }
 
 export interface VaultClaim {
@@ -233,6 +288,9 @@ export interface InitializeMixerInstructionArgs {
   redeem_cooldown_slots: bigint;
   legs_required: number;
   band_bps: number;
+  vault_cap_usdc: bigint;
+  mirror_enabled: number;
+  min_stake_tdns: bigint;
 }
 
 export interface MintTdnsInstructionArgs {
@@ -295,6 +353,37 @@ export interface RequestStakeInstructionArgs {
   amount: bigint;
 }
 
+export interface RequestRedeemInstructionArgs {
+  shares: bigint;
+}
+
+export interface FundVaultInstructionArgs {
+  amount: bigint;
+}
+
+export interface MirrorReadsInstructionArgs {
+  mark_a: bigint;
+  mark_b: bigint;
+  accumulator_a: bigint;
+  accumulator_b: bigint;
+  multiplier_a: bigint;
+  multiplier_b: bigint;
+  mainnet_slot: bigint;
+}
+
+export interface MirrorExecuteLegInstructionArgs {
+  leg: number;
+}
+
+export interface MirrorUnwindInstructionArgs {
+  leg: number;
+  lots: bigint;
+}
+
+export interface MirrorResizeInstructionArgs {
+  leg: number;
+}
+
 export interface InitializeMixerInstructionInput {
   authority: Address;
   programData: Address;
@@ -314,6 +403,9 @@ export interface InitializeMixerInstructionInput {
   redeem_cooldown_slots: bigint;
   legs_required: number;
   band_bps: number;
+  vault_cap_usdc: bigint;
+  mirror_enabled: number;
+  min_stake_tdns: bigint;
 }
 
 export interface MintTdnsInstructionInput {
@@ -556,6 +648,89 @@ export interface SettleGroupInstructionInput {
   vaultUsdc: Address;
   stdnsMint: Address;
   stdnsEscrow: Address;
+}
+
+export interface RequestRedeemInstructionInput {
+  user: Address;
+  vault: Address;
+  stdnsMint: Address;
+  userStdns: Address;
+  stdnsEscrow: Address;
+  usdcMint: Address;
+  userUsdc: Address;
+  shares: bigint;
+}
+
+export interface SettleRedeemInstructionInput {
+  vault: Address;
+  request: Address;
+  user: Address;
+  usdcMint: Address;
+  userUsdc: Address;
+  poolUsdc: Address;
+  vaultUsdc: Address;
+  stdnsMint: Address;
+  stdnsEscrow: Address;
+  backupPool?: Address;
+  userBackup?: Address;
+}
+
+export interface SetBackupPoolInstructionInput {
+  authority: Address;
+  usdcMint: Address;
+  backupUsdcMint: Address;
+  backupPool: Address;
+}
+
+export interface FundVaultInstructionInput {
+  funder: Address;
+  vault: Address;
+  usdcMint: Address;
+  funderUsdc: Address;
+  vaultUsdc: Address;
+  amount: bigint;
+}
+
+export interface InitMirrorInstructionInput {
+  authority: Address;
+  vault: Address;
+}
+
+export interface MirrorReadsInstructionInput {
+  authority: Address;
+  vault: Address;
+  mark_a: bigint;
+  mark_b: bigint;
+  accumulator_a: bigint;
+  accumulator_b: bigint;
+  multiplier_a: bigint;
+  multiplier_b: bigint;
+  mainnet_slot: bigint;
+}
+
+export interface MirrorExecuteLegInstructionInput {
+  authority: Address;
+  vault: Address;
+  group: Address;
+  leg: number;
+}
+
+export interface MirrorUnwindInstructionInput {
+  authority: Address;
+  vault: Address;
+  leg: number;
+  lots: bigint;
+}
+
+export interface MirrorResizeInstructionInput {
+  authority: Address;
+  vault: Address;
+  leg: number;
+}
+
+export interface MirrorDeployUndeployedInstructionInput {
+  authority: Address;
+  vault: Address;
 }
 
 export interface InitializeMixerInstructionAccountOverrides {
@@ -841,7 +1016,132 @@ export interface SettleGroupInstructionAccountOverrides {
   dnsProgram?: Address;
 }
 
+export interface RequestRedeemInstructionAccountOverrides {
+  user?: Address;
+  mixer?: Address;
+  vault?: Address;
+  request?: Address;
+  stdnsMint?: Address;
+  userStdns?: Address;
+  stdnsEscrow?: Address;
+  usdcMint?: Address;
+  userUsdc?: Address;
+  token2022Program?: Address;
+  systemProgram?: Address;
+}
+
+export interface SettleRedeemInstructionAccountOverrides {
+  mixer?: Address;
+  vault?: Address;
+  claim?: Address;
+  request?: Address;
+  user?: Address;
+  usdcMint?: Address;
+  userUsdc?: Address;
+  poolUsdc?: Address;
+  vaultUsdc?: Address;
+  stdnsMint?: Address;
+  stdnsEscrow?: Address;
+  tokenProgram?: Address;
+  token2022Program?: Address;
+  dnsProgram?: Address;
+  backupPool?: Address;
+  userBackup?: Address;
+}
+
+export interface SetBackupPoolInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  usdcMint?: Address;
+  backupUsdcMint?: Address;
+  backupPool?: Address;
+}
+
+export interface FundVaultInstructionAccountOverrides {
+  funder?: Address;
+  mixer?: Address;
+  vault?: Address;
+  usdcMint?: Address;
+  funderUsdc?: Address;
+  vaultUsdc?: Address;
+  tokenProgram?: Address;
+}
+
+export interface InitMirrorInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  vault?: Address;
+  mirror?: Address;
+  systemProgram?: Address;
+}
+
+export interface MirrorReadsInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  vault?: Address;
+  mirror?: Address;
+}
+
+export interface MirrorExecuteLegInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  vault?: Address;
+  mirror?: Address;
+  group?: Address;
+}
+
+export interface MirrorUnwindInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  vault?: Address;
+  mirror?: Address;
+}
+
+export interface MirrorResizeInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  vault?: Address;
+  mirror?: Address;
+}
+
+export interface MirrorDeployUndeployedInstructionAccountOverrides {
+  authority?: Address;
+  mixer?: Address;
+  vault?: Address;
+  mirror?: Address;
+}
+
 /* Codecs */
+const MirrorVenueStructCodec = getStructCodec([
+  ["version", getU8Codec()],
+  ["bump", getU8Codec()],
+  ["vault", getAddressCodec()],
+  ["spot_raw_a", getU64Codec()],
+  ["short_lots_a", getU64Codec()],
+  ["virtual_quote_a", getI64Codec()],
+  ["collateral_a", getI64Codec()],
+  ["unsettled_funding_a", getI64Codec()],
+  ["funding_snapshot_a", getI64Codec()],
+  ["fees_paid_a", getU64Codec()],
+  ["funding_received_a", getI64Codec()],
+  ["spot_raw_b", getU64Codec()],
+  ["short_lots_b", getU64Codec()],
+  ["virtual_quote_b", getI64Codec()],
+  ["collateral_b", getI64Codec()],
+  ["unsettled_funding_b", getI64Codec()],
+  ["funding_snapshot_b", getI64Codec()],
+  ["fees_paid_b", getU64Codec()],
+  ["funding_received_b", getI64Codec()],
+  ["deployed_usdc_a", getU64Codec()],
+  ["deployed_usdc_b", getU64Codec()],
+  ["last_settlement_ts", getI64Codec()],
+  ["mainnet_slot", getU64Codec()],
+]);
+export const MirrorVenueCodec = {
+  ...MirrorVenueStructCodec,
+  decode(data: Parameters<typeof MirrorVenueStructCodec.decode>[0], offset = 0): MirrorVenue { return decodeExact<MirrorVenue>(MirrorVenueStructCodec, Uint8Array.from(data).slice(offset)); },
+};
+
 const MixerPoolStructCodec = getStructCodec([
   ["version", getU8Codec()],
   ["bump", getU8Codec()],
@@ -865,10 +1165,29 @@ const MixerPoolStructCodec = getStructCodec([
   ["redeem_cooldown_slots", getU64Codec()],
   ["legs_required", getU8Codec()],
   ["band_bps", getU16Codec()],
+  ["vault_cap_usdc", getU64Codec()],
+  ["backup_usdc_mint", getAddressCodec()],
+  ["backup_pool", getAddressCodec()],
+  ["mirror_enabled", getU8Codec()],
+  ["min_stake_tdns", getU64Codec()],
 ]);
 export const MixerPoolCodec = {
   ...MixerPoolStructCodec,
   decode(data: Parameters<typeof MixerPoolStructCodec.decode>[0], offset = 0): MixerPool { return decodeExact<MixerPool>(MixerPoolStructCodec, Uint8Array.from(data).slice(offset)); },
+};
+
+const RedeemRequestStructCodec = getStructCodec([
+  ["version", getU8Codec()],
+  ["bump", getU8Codec()],
+  ["vault", getAddressCodec()],
+  ["user", getAddressCodec()],
+  ["user_usdc", getAddressCodec()],
+  ["shares", getU64Codec()],
+  ["request_slot", getU64Codec()],
+]);
+export const RedeemRequestCodec = {
+  ...RedeemRequestStructCodec,
+  decode(data: Parameters<typeof RedeemRequestStructCodec.decode>[0], offset = 0): RedeemRequest { return decodeExact<RedeemRequest>(RedeemRequestStructCodec, Uint8Array.from(data).slice(offset)); },
 };
 
 const StakeGroupStructCodec = getStructCodec([
@@ -963,6 +1282,8 @@ const VaultStructCodec = getStructCodec([
   ["spot_slot", getU64Codec()],
   ["margin_slot", getU64Codec()],
   ["stdns_escrow", getAddressCodec()],
+  ["redeem_escrow_shares", getU64Codec()],
+  ["groups_in_flight", getU64Codec()],
 ]);
 export const VaultCodec = {
   ...VaultStructCodec,
@@ -1004,6 +1325,16 @@ export const ProgramInstruction = {
   SettleStake: "SettleStake",
   AbortStake: "AbortStake",
   SettleGroup: "SettleGroup",
+  RequestRedeem: "RequestRedeem",
+  SettleRedeem: "SettleRedeem",
+  SetBackupPool: "SetBackupPool",
+  FundVault: "FundVault",
+  InitMirror: "InitMirror",
+  MirrorReads: "MirrorReads",
+  MirrorExecuteLeg: "MirrorExecuteLeg",
+  MirrorUnwind: "MirrorUnwind",
+  MirrorResize: "MirrorResize",
+  MirrorDeployUndeployed: "MirrorDeployUndeployed",
 } as const;
 
 export type ProgramInstruction =
@@ -1031,15 +1362,37 @@ export type DecodedInstruction =
   | { type: typeof ProgramInstruction.RequestStake; args: RequestStakeInstructionArgs }
   | { type: typeof ProgramInstruction.SettleStake }
   | { type: typeof ProgramInstruction.AbortStake }
-  | { type: typeof ProgramInstruction.SettleGroup };
+  | { type: typeof ProgramInstruction.SettleGroup }
+  | { type: typeof ProgramInstruction.RequestRedeem; args: RequestRedeemInstructionArgs }
+  | { type: typeof ProgramInstruction.SettleRedeem }
+  | { type: typeof ProgramInstruction.SetBackupPool }
+  | { type: typeof ProgramInstruction.FundVault; args: FundVaultInstructionArgs }
+  | { type: typeof ProgramInstruction.InitMirror }
+  | { type: typeof ProgramInstruction.MirrorReads; args: MirrorReadsInstructionArgs }
+  | { type: typeof ProgramInstruction.MirrorExecuteLeg; args: MirrorExecuteLegInstructionArgs }
+  | { type: typeof ProgramInstruction.MirrorUnwind; args: MirrorUnwindInstructionArgs }
+  | { type: typeof ProgramInstruction.MirrorResize; args: MirrorResizeInstructionArgs }
+  | { type: typeof ProgramInstruction.MirrorDeployUndeployed };
 
 /* Client */
 export class ThalerDnsClient {
+
+  decodeMirrorVenue(input: ArrayLike<number>): MirrorVenue {
+    const data = Uint8Array.from(input);
+    if (!matchDisc(data, MIRROR_VENUE_DISCRIMINATOR)) throw new Error("Invalid MirrorVenue discriminator");
+    return decodeExact<MirrorVenue>(MirrorVenueCodec, data.slice(MIRROR_VENUE_DISCRIMINATOR.length));
+  }
 
   decodeMixerPool(input: ArrayLike<number>): MixerPool {
     const data = Uint8Array.from(input);
     if (!matchDisc(data, MIXER_POOL_DISCRIMINATOR)) throw new Error("Invalid MixerPool discriminator");
     return decodeExact<MixerPool>(MixerPoolCodec, data.slice(MIXER_POOL_DISCRIMINATOR.length));
+  }
+
+  decodeRedeemRequest(input: ArrayLike<number>): RedeemRequest {
+    const data = Uint8Array.from(input);
+    if (!matchDisc(data, REDEEM_REQUEST_DISCRIMINATOR)) throw new Error("Invalid RedeemRequest discriminator");
+    return decodeExact<RedeemRequest>(RedeemRequestCodec, data.slice(REDEEM_REQUEST_DISCRIMINATOR.length));
   }
 
   decodeStakeGroup(input: ArrayLike<number>): StakeGroup {
@@ -1076,6 +1429,9 @@ export class ThalerDnsClient {
         ["redeem_cooldown_slots", getU64Codec()],
         ["legs_required", getU8Codec()],
         ["band_bps", getU16Codec()],
+        ["vault_cap_usdc", getU64Codec()],
+        ["mirror_enabled", getU8Codec()],
+        ["min_stake_tdns", getU64Codec()],
       ]);
       return { type: ProgramInstruction.InitializeMixer, args: decodeExact<InitializeMixerInstructionArgs>(argsCodec, data.slice(INITIALIZE_MIXER_INSTRUCTION_DISCRIMINATOR.length)) };
     }
@@ -1201,6 +1557,65 @@ export class ThalerDnsClient {
       if (data.length !== SETTLE_GROUP_INSTRUCTION_DISCRIMINATOR.length) throw new Error("trailing bytes");
       return { type: ProgramInstruction.SettleGroup };
     }
+    if (matchDisc(data, REQUEST_REDEEM_INSTRUCTION_DISCRIMINATOR)) {
+      const argsCodec = getStructCodec([
+        ["shares", getU64Codec()],
+      ]);
+      return { type: ProgramInstruction.RequestRedeem, args: decodeExact<RequestRedeemInstructionArgs>(argsCodec, data.slice(REQUEST_REDEEM_INSTRUCTION_DISCRIMINATOR.length)) };
+    }
+    if (matchDisc(data, SETTLE_REDEEM_INSTRUCTION_DISCRIMINATOR)) {
+      if (data.length !== SETTLE_REDEEM_INSTRUCTION_DISCRIMINATOR.length) throw new Error("trailing bytes");
+      return { type: ProgramInstruction.SettleRedeem };
+    }
+    if (matchDisc(data, SET_BACKUP_POOL_INSTRUCTION_DISCRIMINATOR)) {
+      if (data.length !== SET_BACKUP_POOL_INSTRUCTION_DISCRIMINATOR.length) throw new Error("trailing bytes");
+      return { type: ProgramInstruction.SetBackupPool };
+    }
+    if (matchDisc(data, FUND_VAULT_INSTRUCTION_DISCRIMINATOR)) {
+      const argsCodec = getStructCodec([
+        ["amount", getU64Codec()],
+      ]);
+      return { type: ProgramInstruction.FundVault, args: decodeExact<FundVaultInstructionArgs>(argsCodec, data.slice(FUND_VAULT_INSTRUCTION_DISCRIMINATOR.length)) };
+    }
+    if (matchDisc(data, INIT_MIRROR_INSTRUCTION_DISCRIMINATOR)) {
+      if (data.length !== INIT_MIRROR_INSTRUCTION_DISCRIMINATOR.length) throw new Error("trailing bytes");
+      return { type: ProgramInstruction.InitMirror };
+    }
+    if (matchDisc(data, MIRROR_READS_INSTRUCTION_DISCRIMINATOR)) {
+      const argsCodec = getStructCodec([
+        ["mark_a", getU64Codec()],
+        ["mark_b", getU64Codec()],
+        ["accumulator_a", getI64Codec()],
+        ["accumulator_b", getI64Codec()],
+        ["multiplier_a", getU64Codec()],
+        ["multiplier_b", getU64Codec()],
+        ["mainnet_slot", getU64Codec()],
+      ]);
+      return { type: ProgramInstruction.MirrorReads, args: decodeExact<MirrorReadsInstructionArgs>(argsCodec, data.slice(MIRROR_READS_INSTRUCTION_DISCRIMINATOR.length)) };
+    }
+    if (matchDisc(data, MIRROR_EXECUTE_LEG_INSTRUCTION_DISCRIMINATOR)) {
+      const argsCodec = getStructCodec([
+        ["leg", getU8Codec()],
+      ]);
+      return { type: ProgramInstruction.MirrorExecuteLeg, args: decodeExact<MirrorExecuteLegInstructionArgs>(argsCodec, data.slice(MIRROR_EXECUTE_LEG_INSTRUCTION_DISCRIMINATOR.length)) };
+    }
+    if (matchDisc(data, MIRROR_UNWIND_INSTRUCTION_DISCRIMINATOR)) {
+      const argsCodec = getStructCodec([
+        ["leg", getU8Codec()],
+        ["lots", getU64Codec()],
+      ]);
+      return { type: ProgramInstruction.MirrorUnwind, args: decodeExact<MirrorUnwindInstructionArgs>(argsCodec, data.slice(MIRROR_UNWIND_INSTRUCTION_DISCRIMINATOR.length)) };
+    }
+    if (matchDisc(data, MIRROR_RESIZE_INSTRUCTION_DISCRIMINATOR)) {
+      const argsCodec = getStructCodec([
+        ["leg", getU8Codec()],
+      ]);
+      return { type: ProgramInstruction.MirrorResize, args: decodeExact<MirrorResizeInstructionArgs>(argsCodec, data.slice(MIRROR_RESIZE_INSTRUCTION_DISCRIMINATOR.length)) };
+    }
+    if (matchDisc(data, MIRROR_DEPLOY_UNDEPLOYED_INSTRUCTION_DISCRIMINATOR)) {
+      if (data.length !== MIRROR_DEPLOY_UNDEPLOYED_INSTRUCTION_DISCRIMINATOR.length) throw new Error("trailing bytes");
+      return { type: ProgramInstruction.MirrorDeployUndeployed };
+    }
     return null;
   }
 
@@ -1219,8 +1634,11 @@ export class ThalerDnsClient {
       ["redeem_cooldown_slots", getU64Codec()],
       ["legs_required", getU8Codec()],
       ["band_bps", getU16Codec()],
+      ["vault_cap_usdc", getU64Codec()],
+      ["mirror_enabled", getU8Codec()],
+      ["min_stake_tdns", getU64Codec()],
     ]);
-    const data = Uint8Array.from([0, ...argsCodec.encode({ venue_slot: input.venue_slot, max_nav_age_slots: input.max_nav_age_slots, abort_timeout_slots: input.abort_timeout_slots, redeem_cooldown_slots: input.redeem_cooldown_slots, legs_required: input.legs_required, band_bps: input.band_bps })]);
+    const data = Uint8Array.from([0, ...argsCodec.encode({ venue_slot: input.venue_slot, max_nav_age_slots: input.max_nav_age_slots, abort_timeout_slots: input.abort_timeout_slots, redeem_cooldown_slots: input.redeem_cooldown_slots, legs_required: input.legs_required, band_bps: input.band_bps, vault_cap_usdc: input.vault_cap_usdc, mirror_enabled: input.mirror_enabled, min_stake_tdns: input.min_stake_tdns })]);
     return {
       programAddress: PROGRAM_ADDRESS,
       accounts: [
@@ -1838,6 +2256,261 @@ export class ThalerDnsClient {
       data,
     };
   }
+
+  async createRequestRedeemInstruction(input: RequestRedeemInstructionInput): Promise<Instruction> {
+    return this.createRequestRedeemInstructionRaw(input, {});
+  }
+
+  async createRequestRedeemInstructionRaw(input: RequestRedeemInstructionInput, accountOverrides: RequestRedeemInstructionAccountOverrides): Promise<Instruction> {
+    const __token2022Program: Address = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+    const __systemProgram: Address = address("11111111111111111111111111111111");
+    const __mixer: Address = await findMixerAddress();
+    const __request: Address = await findRequestAddress2((accountOverrides.vault ?? input.vault), (accountOverrides.user ?? input.user));
+    const argsCodec = getStructCodec([
+      ["shares", getU64Codec()],
+    ]);
+    const data = Uint8Array.from([26, ...argsCodec.encode({ shares: input.shares })]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.user ?? input.user), role: AccountRole.WRITABLE_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.request ?? __request), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.stdnsMint ?? input.stdnsMint), role: AccountRole.READONLY },
+        { address: (accountOverrides.userStdns ?? input.userStdns), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.stdnsEscrow ?? input.stdnsEscrow), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.usdcMint ?? input.usdcMint), role: AccountRole.READONLY },
+        { address: (accountOverrides.userUsdc ?? input.userUsdc), role: AccountRole.READONLY },
+        { address: (accountOverrides.token2022Program ?? __token2022Program), role: AccountRole.READONLY },
+        { address: (accountOverrides.systemProgram ?? __systemProgram), role: AccountRole.READONLY },
+      ],
+      data,
+    };
+  }
+
+  async createSettleRedeemInstruction(input: SettleRedeemInstructionInput): Promise<Instruction> {
+    return this.createSettleRedeemInstructionRaw(input, {});
+  }
+
+  async createSettleRedeemInstructionRaw(input: SettleRedeemInstructionInput, accountOverrides: SettleRedeemInstructionAccountOverrides): Promise<Instruction> {
+    const __tokenProgram: Address = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    const __token2022Program: Address = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+    const __dnsProgram: Address = address("DL3PykXNCnS2oPQC9LQFV3PnMYXDkZGHLZ9LiFgpxnYe");
+    const __mixer: Address = await findMixerAddress();
+    const __claim: Address = await findClaimAddress((accountOverrides.mixer ?? __mixer), (accountOverrides.vault ?? input.vault));
+    const data = Uint8Array.from([27]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.claim ?? __claim), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.request ?? input.request), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.user ?? input.user), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.usdcMint ?? input.usdcMint), role: AccountRole.READONLY },
+        { address: (accountOverrides.userUsdc ?? input.userUsdc), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.poolUsdc ?? input.poolUsdc), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.vaultUsdc ?? input.vaultUsdc), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.stdnsMint ?? input.stdnsMint), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.stdnsEscrow ?? input.stdnsEscrow), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.tokenProgram ?? __tokenProgram), role: AccountRole.READONLY },
+        { address: (accountOverrides.token2022Program ?? __token2022Program), role: AccountRole.READONLY },
+        { address: (accountOverrides.dnsProgram ?? __dnsProgram), role: AccountRole.READONLY },
+        { address: (accountOverrides.backupPool ?? input.backupPool ?? PROGRAM_ADDRESS), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.userBackup ?? input.userBackup ?? PROGRAM_ADDRESS), role: AccountRole.WRITABLE },
+      ],
+      data,
+    };
+  }
+
+  async createSetBackupPoolInstruction(input: SetBackupPoolInstructionInput): Promise<Instruction> {
+    return this.createSetBackupPoolInstructionRaw(input, {});
+  }
+
+  async createSetBackupPoolInstructionRaw(input: SetBackupPoolInstructionInput, accountOverrides: SetBackupPoolInstructionAccountOverrides): Promise<Instruction> {
+    const __mixer: Address = await findMixerAddress();
+    const data = Uint8Array.from([28]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.WRITABLE_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.usdcMint ?? input.usdcMint), role: AccountRole.READONLY },
+        { address: (accountOverrides.backupUsdcMint ?? input.backupUsdcMint), role: AccountRole.READONLY },
+        { address: (accountOverrides.backupPool ?? input.backupPool), role: AccountRole.READONLY },
+      ],
+      data,
+    };
+  }
+
+  async createFundVaultInstruction(input: FundVaultInstructionInput): Promise<Instruction> {
+    return this.createFundVaultInstructionRaw(input, {});
+  }
+
+  async createFundVaultInstructionRaw(input: FundVaultInstructionInput, accountOverrides: FundVaultInstructionAccountOverrides): Promise<Instruction> {
+    const __tokenProgram: Address = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    const __mixer: Address = await findMixerAddress();
+    const argsCodec = getStructCodec([
+      ["amount", getU64Codec()],
+    ]);
+    const data = Uint8Array.from([29, ...argsCodec.encode({ amount: input.amount })]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.funder ?? input.funder), role: AccountRole.READONLY_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.READONLY },
+        { address: (accountOverrides.usdcMint ?? input.usdcMint), role: AccountRole.READONLY },
+        { address: (accountOverrides.funderUsdc ?? input.funderUsdc), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.vaultUsdc ?? input.vaultUsdc), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.tokenProgram ?? __tokenProgram), role: AccountRole.READONLY },
+      ],
+      data,
+    };
+  }
+
+  async createInitMirrorInstruction(input: InitMirrorInstructionInput): Promise<Instruction> {
+    return this.createInitMirrorInstructionRaw(input, {});
+  }
+
+  async createInitMirrorInstructionRaw(input: InitMirrorInstructionInput, accountOverrides: InitMirrorInstructionAccountOverrides): Promise<Instruction> {
+    const __systemProgram: Address = address("11111111111111111111111111111111");
+    const __mixer: Address = await findMixerAddress();
+    const __mirror: Address = await findMirrorAddress((accountOverrides.vault ?? input.vault));
+    const data = Uint8Array.from([30]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.WRITABLE_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.READONLY },
+        { address: (accountOverrides.mirror ?? __mirror), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.systemProgram ?? __systemProgram), role: AccountRole.READONLY },
+      ],
+      data,
+    };
+  }
+
+  async createMirrorReadsInstruction(input: MirrorReadsInstructionInput): Promise<Instruction> {
+    return this.createMirrorReadsInstructionRaw(input, {});
+  }
+
+  async createMirrorReadsInstructionRaw(input: MirrorReadsInstructionInput, accountOverrides: MirrorReadsInstructionAccountOverrides): Promise<Instruction> {
+    const __mixer: Address = await findMixerAddress();
+    const __mirror: Address = await findMirrorAddress((accountOverrides.vault ?? input.vault));
+    const argsCodec = getStructCodec([
+      ["mark_a", getU64Codec()],
+      ["mark_b", getU64Codec()],
+      ["accumulator_a", getI64Codec()],
+      ["accumulator_b", getI64Codec()],
+      ["multiplier_a", getU64Codec()],
+      ["multiplier_b", getU64Codec()],
+      ["mainnet_slot", getU64Codec()],
+    ]);
+    const data = Uint8Array.from([31, ...argsCodec.encode({ mark_a: input.mark_a, mark_b: input.mark_b, accumulator_a: input.accumulator_a, accumulator_b: input.accumulator_b, multiplier_a: input.multiplier_a, multiplier_b: input.multiplier_b, mainnet_slot: input.mainnet_slot })]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.READONLY_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.mirror ?? __mirror), role: AccountRole.WRITABLE },
+      ],
+      data,
+    };
+  }
+
+  async createMirrorExecuteLegInstruction(input: MirrorExecuteLegInstructionInput): Promise<Instruction> {
+    return this.createMirrorExecuteLegInstructionRaw(input, {});
+  }
+
+  async createMirrorExecuteLegInstructionRaw(input: MirrorExecuteLegInstructionInput, accountOverrides: MirrorExecuteLegInstructionAccountOverrides): Promise<Instruction> {
+    const __mixer: Address = await findMixerAddress();
+    const __mirror: Address = await findMirrorAddress((accountOverrides.vault ?? input.vault));
+    const argsCodec = getStructCodec([
+      ["leg", getU8Codec()],
+    ]);
+    const data = Uint8Array.from([32, ...argsCodec.encode({ leg: input.leg })]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.READONLY_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.mirror ?? __mirror), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.group ?? input.group), role: AccountRole.WRITABLE },
+      ],
+      data,
+    };
+  }
+
+  async createMirrorUnwindInstruction(input: MirrorUnwindInstructionInput): Promise<Instruction> {
+    return this.createMirrorUnwindInstructionRaw(input, {});
+  }
+
+  async createMirrorUnwindInstructionRaw(input: MirrorUnwindInstructionInput, accountOverrides: MirrorUnwindInstructionAccountOverrides): Promise<Instruction> {
+    const __mixer: Address = await findMixerAddress();
+    const __mirror: Address = await findMirrorAddress((accountOverrides.vault ?? input.vault));
+    const argsCodec = getStructCodec([
+      ["leg", getU8Codec()],
+      ["lots", getU64Codec()],
+    ]);
+    const data = Uint8Array.from([33, ...argsCodec.encode({ leg: input.leg, lots: input.lots })]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.READONLY_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.mirror ?? __mirror), role: AccountRole.WRITABLE },
+      ],
+      data,
+    };
+  }
+
+  async createMirrorResizeInstruction(input: MirrorResizeInstructionInput): Promise<Instruction> {
+    return this.createMirrorResizeInstructionRaw(input, {});
+  }
+
+  async createMirrorResizeInstructionRaw(input: MirrorResizeInstructionInput, accountOverrides: MirrorResizeInstructionAccountOverrides): Promise<Instruction> {
+    const __mixer: Address = await findMixerAddress();
+    const __mirror: Address = await findMirrorAddress((accountOverrides.vault ?? input.vault));
+    const argsCodec = getStructCodec([
+      ["leg", getU8Codec()],
+    ]);
+    const data = Uint8Array.from([34, ...argsCodec.encode({ leg: input.leg })]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.READONLY_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.mirror ?? __mirror), role: AccountRole.WRITABLE },
+      ],
+      data,
+    };
+  }
+
+  async createMirrorDeployUndeployedInstruction(input: MirrorDeployUndeployedInstructionInput): Promise<Instruction> {
+    return this.createMirrorDeployUndeployedInstructionRaw(input, {});
+  }
+
+  async createMirrorDeployUndeployedInstructionRaw(input: MirrorDeployUndeployedInstructionInput, accountOverrides: MirrorDeployUndeployedInstructionAccountOverrides): Promise<Instruction> {
+    const __mixer: Address = await findMixerAddress();
+    const __mirror: Address = await findMirrorAddress((accountOverrides.vault ?? input.vault));
+    const data = Uint8Array.from([35]);
+    return {
+      programAddress: PROGRAM_ADDRESS,
+      accounts: [
+        { address: (accountOverrides.authority ?? input.authority), role: AccountRole.READONLY_SIGNER },
+        { address: (accountOverrides.mixer ?? __mixer), role: AccountRole.READONLY },
+        { address: (accountOverrides.vault ?? input.vault), role: AccountRole.WRITABLE },
+        { address: (accountOverrides.mirror ?? __mirror), role: AccountRole.WRITABLE },
+      ],
+      data,
+    };
+  }
 }
 
 /* Program Plugin */
@@ -1852,7 +2525,9 @@ export function thalerDnsProgram() {
     ...client,
     thalerDns: {
       accounts: {
+        mirrorVenue: addSelfFetchFunctions(client, MirrorVenueCodec),
         mixerPool: addSelfFetchFunctions(client, MixerPoolCodec),
+        redeemRequest: addSelfFetchFunctions(client, RedeemRequestCodec),
         stakeGroup: addSelfFetchFunctions(client, StakeGroupCodec),
         stakeRequest: addSelfFetchFunctions(client, StakeRequestCodec),
         vault: addSelfFetchFunctions(client, VaultCodec),
@@ -1881,6 +2556,16 @@ export function thalerDnsProgram() {
         settleStake: (input: SettleStakeInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createSettleStakeInstruction(input)),
         abortStake: (input: AbortStakeInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createAbortStakeInstruction(input)),
         settleGroup: (input: SettleGroupInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createSettleGroupInstruction(input)),
+        requestRedeem: (input: RequestRedeemInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createRequestRedeemInstruction(input)),
+        settleRedeem: (input: SettleRedeemInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createSettleRedeemInstruction(input)),
+        setBackupPool: (input: SetBackupPoolInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createSetBackupPoolInstruction(input)),
+        fundVault: (input: FundVaultInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createFundVaultInstruction(input)),
+        initMirror: (input: InitMirrorInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createInitMirrorInstruction(input)),
+        mirrorReads: (input: MirrorReadsInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createMirrorReadsInstruction(input)),
+        mirrorExecuteLeg: (input: MirrorExecuteLegInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createMirrorExecuteLegInstruction(input)),
+        mirrorUnwind: (input: MirrorUnwindInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createMirrorUnwindInstruction(input)),
+        mirrorResize: (input: MirrorResizeInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createMirrorResizeInstruction(input)),
+        mirrorDeployUndeployed: (input: MirrorDeployUndeployedInstructionInput) => addSelfPlanAndSendFunctions(client, __client.createMirrorDeployUndeployedInstruction(input)),
       },
     },
   });
@@ -1938,6 +2623,27 @@ export async function findRequestAddress(group: Address, user: Address): Promise
         new Uint8Array([115, 116, 97, 107, 101]),
       getAddressCodec().encode(group),
       getAddressCodec().encode(user),
+    ],
+  }))[0];
+}
+
+export async function findRequestAddress2(vault: Address, user: Address): Promise<Address> {
+  return (await getProgramDerivedAddress({
+    programAddress: PROGRAM_ADDRESS,
+    seeds: [
+        new Uint8Array([114, 101, 100, 101, 101, 109]),
+      getAddressCodec().encode(vault),
+      getAddressCodec().encode(user),
+    ],
+  }))[0];
+}
+
+export async function findMirrorAddress(vault: Address): Promise<Address> {
+  return (await getProgramDerivedAddress({
+    programAddress: PROGRAM_ADDRESS,
+    seeds: [
+        new Uint8Array([109, 105, 114, 114, 111, 114]),
+      getAddressCodec().encode(vault),
     ],
   }))[0];
 }

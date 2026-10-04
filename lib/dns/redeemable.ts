@@ -11,7 +11,14 @@ export function maxRedeemableShares(claim: bigint, navUsdc: bigint, shareSupply:
   return assetsForShares(capped, navUsdc, shareSupply) > BigInt(0) ? capped : BigInt(0);
 }
 
-export type Redeemable = { claim: bigint; navUsdc: bigint; shareSupply: bigint; maxShares: bigint };
+export type Redeemable = {
+  claim: bigint;
+  navUsdc: bigint;
+  shareSupply: bigint;
+  maxShares: bigint;
+  stdnsEscrow: Address;
+  groupsInFlight: bigint;
+};
 
 export async function readRedeemable(
   vault: Address,
@@ -27,5 +34,7 @@ export async function readRedeemable(
     navUsdc: v.nav_usdc,
     shareSupply: v.share_supply,
     maxShares: maxRedeemableShares(claim, v.nav_usdc, v.share_supply),
+    stdnsEscrow: v.stdns_escrow,
+    groupsInFlight: v.groups_in_flight,
   };
 }

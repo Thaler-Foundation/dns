@@ -11,9 +11,9 @@ import { TokenIcon } from "@/components/token-icons";
 import { StDnsTokenIcon } from "@/components/vaults/stock-icons";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { useDnsSend } from "@/hooks/use-dns-send";
-import type { DnsVaultInfo } from "@/hooks/use-dns";
+import { useDns, type DnsVaultInfo } from "@/hooks/use-dns";
 import type { DnsMints } from "@/lib/dns/tx";
-import { redeemIxs } from "@/lib/dns/tx";
+import { redeemIxs, requestRedeemIxs } from "@/lib/dns/tx";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms, parseAtoms } from "@/lib/dns/math";
 import type { VaultStrategy } from "@/lib/vaults-data";
 import { readRedeemable, type Redeemable } from "@/lib/dns/redeemable";
@@ -60,19 +60,37 @@ export function VaultRedeemModal({
       live = false;
     };
   }, [open, info.vault, connection]);
+  const dns = useDns();
+  const cooldownSlots = dns.mixer?.redeemCooldownSlots ?? BigInt(0);
+  const cooldownMinutes = Math.ceil((Number(cooldownSlots) * 400) / 60_000);
   const shares = parseAtoms(amount, STDNS_DECIMALS) ?? BigInt(0);
   const payout = shares > BigInt(0) ? assetsForShares(shares, info.navUsdc, info.shareSupply) : BigInt(0);
   const tooMuch = shares > balance;
   const limit = redeemable !== null && redeemable.maxShares < balance ? redeemable.maxShares : balance;
   const overCap = !tooMuch && redeemable !== null && shares > redeemable.maxShares;
+  const inFlight = redeemable !== null && redeemable.groupsInFlight > BigInt(0);
+  const requestPath = overCap && !inFlight;
   const paysNothing =
     shares > BigInt(0) &&
     (redeemable !== null ? assetsForShares(shares, redeemable.navUsdc, redeemable.shareSupply) : payout) === BigInt(0);
 
   const handleRedeem = async () => {
-    if (!wallet.address || shares <= BigInt(0) || tooMuch || overCap || paysNothing) return;
+    if (!wallet.address || shares <= BigInt(0) || tooMuch || paysNothing || inFlight || (overCap && !requestPath)) return;
     setIsSubmitting(true);
     try {
+      if (requestPath && redeemable) {
+        const signature = await sendDns(
+          await requestRedeemIxs(wallet.address, mints, info.vault, info.stdnsMint, redeemable.stdnsEscrow, shares)
+        );
+        toast.success(
+          `Withdrawal requested: ${formatAtoms(shares, STDNS_DECIMALS, 6)} stDNS locked in the vault's escrow`,
+          { description: `Paid in USDC after the ${cooldownMinutes} minute cooldown, when the keeper unwinds the hedge and settles it. ${signature}` }
+        );
+        setAmount("");
+        onOpenChange(false);
+        onRedeemed();
+        return;
+      }
       const signature = await sendDns(
         await redeemIxs(wallet.address, mints, info.vault, info.stdnsMint, shares)
       );
@@ -143,8 +161,8 @@ export function VaultRedeemModal({
           </div>
 
           {redeemable !== null && (
-            <p className="text-[11px] font-mono text-muted-foreground" data-redeemable={limit.toString()}>
-              Redeemable now: {formatAtoms(limit, STDNS_DECIMALS, 6)} stDNS ({formatAtoms(assetsForShares(limit, redeemable.navUsdc, redeemable.shareSupply), USDC_DECIMALS)} USDC)
+            <p className="text-[11px] font-mono text-muted-foreground" data-redeemable={limit.toString()} data-cooldown-slots={cooldownSlots.toString()}>
+              Redeemable now: {formatAtoms(limit, STDNS_DECIMALS, 6)} stDNS ({formatAtoms(assetsForShares(limit, redeemable.navUsdc, redeemable.shareSupply), USDC_DECIMALS)} USDC). Larger amounts are requested and paid after a {cooldownMinutes} minute cooldown.
             </p>
           )}
 
@@ -166,17 +184,22 @@ export function VaultRedeemModal({
             variant="framed"
             size="lg"
             onClick={handleRedeem}
-            disabled={shares <= BigInt(0) || tooMuch || overCap || paysNothing || isSubmitting}
+            disabled={shares <= BigInt(0) || tooMuch || paysNothing || inFlight || isSubmitting}
             className="w-full h-11 font-sans font-medium text-sm tracking-wide disabled:opacity-40"
+            data-request-path={requestPath ? "1" : "0"}
           >
             {tooMuch
               ? "Amount exceeds your stDNS"
-              : overCap
-              ? "Exceeds what can be redeemed now"
               : paysNothing
               ? "Amount too small to redeem"
+              : inFlight
+              ? "Vault is settling a stake, try again shortly"
               : isSubmitting
-              ? "Withdrawing..."
+              ? requestPath
+                ? "Requesting..."
+                : "Withdrawing..."
+              : requestPath
+              ? `Request withdrawal (${cooldownMinutes} min cooldown)`
               : "Withdraw"}
           </Button>
         </div>
