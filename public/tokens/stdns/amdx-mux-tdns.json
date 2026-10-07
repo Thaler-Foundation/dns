@@ -1,0 +1,6 @@
+{
+  "name": "stDNS AMDx/MUx",
+  "symbol": "stAMDMU",
+  "description": "Thaler DNS vault share for the AMDx/MUx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/amdx-mux-tdns.png"
+}

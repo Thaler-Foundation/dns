@@ -1,0 +1,6 @@
+{
+  "name": "stDNS METAx/TSLAx",
+  "symbol": "stMETATSLA",
+  "description": "Thaler DNS vault share for the METAx/TSLAx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/metax-tslax-tdns.png"
+}

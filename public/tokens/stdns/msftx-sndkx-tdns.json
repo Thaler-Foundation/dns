@@ -1,0 +1,6 @@
+{
+  "name": "stDNS MSFTx/SNDKx",
+  "symbol": "stMSFTSNDK",
+  "description": "Thaler DNS vault share for the MSFTx/SNDKx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/msftx-sndkx-tdns.png"
+}

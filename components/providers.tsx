@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { DnsWalletProvider } from "@/hooks/use-dns-wallet";
 import { AccountProvider } from "@/hooks/use-account";
+import { DnsProvider } from "@/hooks/use-dns";
 import { AnalyticsGate } from "@/components/analytics-gate";
 import { CookieBanner } from "@/components/cookie-banner";
 
@@ -37,6 +38,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={wallets} autoConnect>
           <DnsWalletProvider>
+            <DnsProvider>
             <AccountProvider>
               <TooltipProvider>
                 {children}
@@ -45,6 +47,7 @@ export function Providers({ children }: { children: ReactNode }) {
                 <Toaster />
               </TooltipProvider>
             </AccountProvider>
+            </DnsProvider>
           </DnsWalletProvider>
         </WalletProvider>
       </ConnectionProvider>

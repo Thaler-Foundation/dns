@@ -1,0 +1,6 @@
+{
+  "name": "stDNS INTCx/MUx",
+  "symbol": "stINTCMU",
+  "description": "Thaler DNS vault share for the INTCx/MUx pair.",
+  "image": "https://dns.thaler.finance/tokens/stdns/intcx-mux-tdns.png"
+}

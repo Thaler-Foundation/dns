@@ -12,6 +12,7 @@ export function SiteHeader() {
 
   const isSwap = pathname === "/";
   const isVaults = pathname.startsWith("/vaults");
+  const isPositions = pathname.startsWith("/positions");
 
   return (
     <header className="relative z-20 border-b border-border pt-[env(safe-area-inset-top)]">
@@ -43,6 +44,17 @@ export function SiteHeader() {
               )}
             >
               Smart Vaults
+            </Link>
+            <Link
+              href="/positions"
+              className={cn(
+                "px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors",
+                isPositions
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+              )}
+            >
+              My Positions
             </Link>
           </nav>
         </div>

@@ -2,11 +2,61 @@
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { TokenIcon } from "@/components/token-icons";
 import { Button } from "@/components/ui/button";
-import { StockIcon, TokenizedStockBadge, VaultPairBadge } from "@/components/vaults/stock-icons";
+import { StDnsTokenIcon, StockIcon, TokenizedStockBadge, VaultPairBadge } from "@/components/vaults/stock-icons";
 import { VaultDepositModal } from "@/components/vaults/vault-deposit-modal";
+import { VaultRedeemModal } from "@/components/vaults/vault-redeem-modal";
+import { useDns } from "@/hooks/use-dns";
+import { useDnsWallet } from "@/hooks/use-dns-wallet";
+import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
+import { legFigures, type LegFigures } from "@/lib/dns/hedge";
+import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
+
+function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures | null; leg: DnsHedgeLeg | null }) {
+  if (!figures || !leg) {
+    return (
+      <>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Long {stock}</span>
+          <span className="font-semibold text-muted-foreground">24% target, no position yet</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Short {stock}</span>
+          <span className="font-semibold text-muted-foreground">24% target, no position yet</span>
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <div className="flex items-center justify-between" data-leg-long={stock}>
+        <span className="text-muted-foreground">Long {stock}</span>
+        <span className="font-semibold text-foreground">{figures.longShares} sh ({formatAtoms(figures.longUsdc, USDC_DECIMALS, 2)} USDC)</span>
+      </div>
+      <div className="flex items-center justify-between" data-leg-short={stock}>
+        <span className="text-muted-foreground">Short {stock}</span>
+        <span className="font-semibold text-foreground">{figures.shortShares} sh ({formatAtoms(figures.shortUsdc, USDC_DECIMALS, 2)} USDC)</span>
+      </div>
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-muted-foreground">Mark {figures.markUsdc} USDC, margin {formatAtoms(leg.collateral, USDC_DECIMALS, 2)}</span>
+        <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+          {figures.unrealised < BigInt(0) ? "" : "+"}{formatAtoms(figures.unrealised, USDC_DECIMALS, 2)} unrealised, +{formatAtoms(leg.fundingReceived, USDC_DECIMALS, 2)} funding
+        </span>
+      </div>
+    </>
+  );
+}
+
+function hedgeFigures(info: DnsVaultInfo | undefined, side: "a" | "b"): { figures: LegFigures | null; leg: DnsHedgeLeg | null } {
+  if (!info?.hedge) return { figures: null, leg: null };
+  const leg = info.hedge.legs[side];
+  const params =
+    side === "a"
+      ? { tickSize: info.params.tickSizeA, baseLotDecimals: info.params.baseLotDecimalsA, spotDecimals: info.params.spotDecimalsA }
+      : { tickSize: info.params.tickSizeB, baseLotDecimals: info.params.baseLotDecimalsB, spotDecimals: info.params.spotDecimalsB };
+  return { figures: legFigures(leg, info.hedge.marks[side], params), leg };
+}
 import {
   ArrowLeft
 } from "lucide-react";
@@ -20,6 +70,16 @@ function VaultDetailContent({ id }: { id: string }) {
   const vault = getVaultById(id);
 
   const [isDepositOpen, setIsDepositOpen] = useState(action === "deposit");
+  const [isRedeemOpen, setIsRedeemOpen] = useState(false);
+  const wallet = useDnsWallet();
+  const dns = useDns();
+  const info = vault ? dns.vaults[vault.id] : undefined;
+  const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
+  const position = wallet.connected && held ? held.atoms : BigInt(0);
+  const positionUsdc = info ? assetsForShares(position, info.navUsdc, info.shareSupply) : BigInt(0);
+  const refreshPosition = () => {
+    void dns.refresh();
+  };
 
   if (!vault) {
     return notFound();
@@ -85,12 +145,14 @@ function VaultDetailContent({ id }: { id: string }) {
 
         <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <TokenIcon symbol={vault.targetToken} size={36} />
+            <StDnsTokenIcon stock1={vault.stock1} stock2={vault.stock2} size={36} />
             <div>
               <p className="text-2xl font-bold font-mono text-foreground">
-                0.00 {vault.targetToken}
+                {formatAtoms(position, STDNS_DECIMALS, 6)} stDNS
               </p>
-              <p className="text-xs font-mono text-muted-foreground">$0.00 USD</p>
+              <p className="text-xs font-mono text-muted-foreground">
+                {formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC
+              </p>
             </div>
           </div>
 
@@ -104,8 +166,9 @@ function VaultDetailContent({ id }: { id: string }) {
             </Button>
             <Button
               variant="framed"
-              disabled
-              title="No active position to withdraw"
+              disabled={position <= BigInt(0) || !info || !dns.mints}
+              title={position <= BigInt(0) ? "No active position to withdraw" : undefined}
+              onClick={() => setIsRedeemOpen(true)}
               className="h-9 px-4 font-sans font-medium tracking-wide disabled:opacity-40 disabled:pointer-events-none"
             >
               Withdraw
@@ -138,14 +201,7 @@ function VaultDetailContent({ id }: { id: string }) {
               {isTokenizedStock(vault.stock1) && <TokenizedStockBadge text="xStock" />}
             </div>
             <div className="space-y-1.5 pt-1 text-xs font-mono">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Long {vault.stock1}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Short {vault.stock1}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
+              <LegLines stock={vault.stock1} {...hedgeFigures(info, "a")} />
             </div>
           </div>
 
@@ -160,18 +216,17 @@ function VaultDetailContent({ id }: { id: string }) {
               {isTokenizedStock(vault.stock2) && <TokenizedStockBadge text="xStock" />}
             </div>
             <div className="space-y-1.5 pt-1 text-xs font-mono">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Long {vault.stock2}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Short {vault.stock2}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">24% Allocation</span>
-              </div>
+              <LegLines stock={vault.stock2} {...hedgeFigures(info, "b")} />
             </div>
           </div>
         </div>
 
+        {info?.hedge && (
+          <p className="text-[11px] font-mono text-muted-foreground" data-hedge-slot={info.hedge.mainnetSlot}>
+            Hedge mirrored from mainnet Phoenix at the live mark plus the taker fee (mainnet slot {info.hedge.mainnetSlot.toLocaleString("en-US")}, read {new Date(info.hedge.capturedAtMs).toISOString().slice(11, 19)} UTC)
+            {info.groupsInFlight > BigInt(0) ? "; a stake group is settling" : ""}
+          </p>
+        )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Underlying Collateral:</span>
@@ -232,21 +287,21 @@ function VaultDetailContent({ id }: { id: string }) {
 
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              Automated Rebalance
+              Share-Matched Hedge
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">
-              Positions re-peg to 0.00 beta whenever spread divergence exceeds ±1.5%,
-              harvesting volatility and funding rate spreads.
+              Each short is sized to the number of shares the vault holds and is resized when a
+              dividend changes that count. Income comes from funding paid to shorts and from dividends.
             </p>
           </div>
 
           <div className="p-3 rounded-sm border border-border/60 bg-muted/10 space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-foreground">
-              Principal Isolated
+              Fully Margined Shorts
             </div>
             <p className="text-muted-foreground leading-relaxed text-[11px]">
-              No borrow debt or liquidation thresholds exist. Principal is 100% held
-              in {vault.targetToken} with zero lockup penalty on withdrawals.
+              Each short is backed by USDC margin equal to its full size, so positions start at 1x
+              with no borrowing. Phoenix can still liquidate a short if its margin runs out.
             </p>
           </div>
         </div>
@@ -256,7 +311,19 @@ function VaultDetailContent({ id }: { id: string }) {
         vault={vault}
         open={isDepositOpen}
         onOpenChange={setIsDepositOpen}
+        onDeposited={refreshPosition}
       />
+      {info && dns.mints && (
+        <VaultRedeemModal
+          vault={vault}
+          info={info}
+          mints={dns.mints}
+          balance={position}
+          open={isRedeemOpen}
+          onOpenChange={setIsRedeemOpen}
+          onRedeemed={refreshPosition}
+        />
+      )}
     </div>
   );
 }

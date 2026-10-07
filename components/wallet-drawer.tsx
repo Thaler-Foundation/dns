@@ -16,13 +16,27 @@ import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import { TOKEN_LIST, truncateAddress } from "@/lib/tokens";
+import Link from "next/link";
+import { StDnsTokenIcon } from "@/components/vaults/stock-icons";
+import { useDns } from "@/hooks/use-dns";
+import { STDNS_DECIMALS, USDC_DECIMALS, formatAtoms } from "@/lib/dns/math";
+import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 import { cn } from "@/lib/utils";
 
 export function WalletDrawer() {
   const wallet = useDnsWallet();
   const { balances } = useTokenBalances();
   const { prices } = useTokenPrices();
+  const dns = useDns();
   const [copied, setCopied] = useState(false);
+
+  const stdnsRows = useMemo(() => {
+    const byId = new Map(VAULT_STRATEGIES.map((v) => [v.id, v]));
+    return dns.positions.flatMap((p) => {
+      const v = byId.get(p.vaultId);
+      return v ? [{ p, v }] : [];
+    });
+  }, [dns.positions]);
   const [activeTab, setActiveTab] = useState<"balances" | "activity">("balances");
 
   const address = wallet.address;
@@ -34,8 +48,12 @@ export function WalletDrawer() {
       const price = prices[token.symbol]?.usdPrice ?? 0;
       sum += balance * price;
     }
+    const usdcPrice = prices.USDC?.usdPrice ?? 0;
+    for (const { p } of stdnsRows) {
+      sum += (Number(p.usdcValue) / 10 ** USDC_DECIMALS) * usdcPrice;
+    }
     return sum;
-  }, [balances, prices]);
+  }, [balances, prices, stdnsRows]);
 
   if (!address) return null;
 
@@ -174,6 +192,43 @@ export function WalletDrawer() {
                   </div>
                 );
               })}
+              {stdnsRows.map(({ p, v }) => {
+                const valueUsd = (Number(p.usdcValue) / 10 ** USDC_DECIMALS) * (prices.USDC?.usdPrice ?? 0);
+                return (
+                  <div key={p.vaultId} data-stdns={v.id} className="flex items-center justify-between py-3.5">
+                    <div className="flex items-center gap-3">
+                      <StDnsTokenIcon stock1={v.stock1} stock2={v.stock2} size={28} />
+                      <div>
+                        <div className="font-medium text-sm text-foreground">
+                          stDNS {v.stock1}/{v.stock2}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          st{v.stock1.slice(0, -1)}{v.stock2.slice(0, -1)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono text-sm font-medium text-foreground tabular-nums">
+                        {formatAtoms(p.atoms, STDNS_DECIMALS, 5)}
+                      </div>
+                      <div className="font-mono text-xs text-muted-foreground tabular-nums">
+                        ${valueUsd.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {stdnsRows.length > 0 && (
+                <Link
+                  href="/positions"
+                  className="py-3 text-xs font-medium text-muted-foreground hover:text-foreground underline underline-offset-4"
+                >
+                  View all positions
+                </Link>
+              )}
             </div>
           ) : (
             <div className="mt-8 flex flex-col items-center justify-center text-center">

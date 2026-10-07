@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { StockIcon, TokenizedStockBadge } from "@/components/vaults/stock-icons";
+import { StDnsTokenIcon, StockIcon, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import {
   STOCKS,
@@ -19,24 +19,50 @@ import {
 import { Wallet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useDnsWallet } from "@/hooks/use-dns-wallet";
+import { useTokenBalances } from "@/hooks/use-token-balances";
+import { useDns } from "@/hooks/use-dns";
+import { useDnsSend } from "@/hooks/use-dns-send";
+import { requestStakeIxs } from "@/lib/dns/tx";
+import { readStakeTarget } from "@/lib/dns/stake";
+import { useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, sharesForAssets, tdnsToUsdcAtoms } from "@/lib/dns/math";
 
 interface VaultDepositModalProps {
   vault: VaultStrategy;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userBalance?: number;
+  onDeposited?: () => void;
 }
 
 export function VaultDepositModal({
   vault,
   open,
   onOpenChange,
-  userBalance = 12450.0,
+  onDeposited,
 }: VaultDepositModalProps) {
   const [amount, setAmount] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { prices } = useTokenPrices();
+  const wallet = useDnsWallet();
+  const { balances, refreshBalances } = useTokenBalances();
+  const userBalance = balances.tDNS;
+  const dns = useDns();
+  const sendDns = useDnsSend();
+  const { connection } = useConnection();
+  const info = dns.vaults[vault.id];
+  const tdnsAtoms = parseAtoms(amount, TDNS_DECIMALS) ?? BigInt(0);
+  const previewShares =
+    info && tdnsAtoms > BigInt(0)
+      ? sharesForAssets(tdnsToUsdcAtoms(tdnsAtoms), info.navUsdc, info.shareSupply)
+      : BigInt(0);
   const hasTokenized = hasTokenizedStock(vault);
+  const minStake = dns.mixer?.minStakeTdns ?? BigInt(0);
+  const belowMin = tdnsAtoms > BigInt(0) && tdnsAtoms < minStake;
+  const room = info && dns.mixer ? dns.mixer.vaultCapUsdc - info.navUsdc - info.pendingStakeUsdc : null;
+  const roomLeft = room === null ? null : room > BigInt(0) ? room : BigInt(0);
+  const overCap = roomLeft !== null && tdnsToUsdcAtoms(tdnsAtoms) > roomLeft;
 
   const tdnsUsd = prices.tDNS?.usdPrice ?? 100;
   const usdcEquivalent = (numericAmount: number) =>
@@ -48,21 +74,50 @@ export function VaultDepositModal({
   const numericAmount = parseFloat(amount) || 0;
 
   const handleSetPercent = (pct: number) => {
-    const calculated = (userBalance * pct).toFixed(2);
+    const calculated = (Math.floor(userBalance * pct * 1e6) / 1e6).toFixed(6);
     setAmount(calculated);
   };
 
-  const handleDeposit = () => {
-    if (numericAmount <= 0) return;
+  const handleDeposit = async () => {
+    if (!wallet.connected || !wallet.address) {
+      wallet.login();
+      return;
+    }
+    if (tdnsAtoms <= BigInt(0) || !info || !dns.mints || belowMin || overCap) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onOpenChange(false);
-      setAmount("");
-      toast.success(
-        `Successfully deposited ${numericAmount.toLocaleString()} tDNS into ${vault.displayName}`
+    try {
+      const target = await readStakeTarget(info.vault, async (a) => {
+        const account = await connection.getAccountInfo(new PublicKey(a), "confirmed");
+        return account ? new Uint8Array(account.data) : null;
+      });
+      if (target.stdnsMint !== info.stdnsMint) {
+        throw new Error(`vault stDNS mint ${target.stdnsMint} is not the listed ${info.stdnsMint}`);
+      }
+      const signature = await sendDns(
+        await requestStakeIxs(
+          wallet.address,
+          dns.mints,
+          info.vault,
+          target.stdnsMint,
+          target.vaultUsdc,
+          target.openGroup,
+          tdnsAtoms
+        )
       );
-    }, 900);
+      toast.success(
+        `Stake requested: ${formatAtoms(tdnsAtoms, TDNS_DECIMALS)} tDNS into ${vault.displayName}`,
+        { description: `Pending until its group is priced, then settled to stDNS automatically. ${signature}` }
+      );
+      setAmount("");
+      onOpenChange(false);
+      refreshBalances();
+      await dns.refresh();
+      onDeposited?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Deposit failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const totalUsdc = usdcEquivalent(numericAmount || 0);
@@ -169,29 +224,20 @@ export function VaultDepositModal({
             </div>
           </div>
           <div className="rounded-sm border border-border bg-background/50 p-3.5">
-            <span className="text-muted-foreground text-xs">You Receive</span>
+            <span className="text-muted-foreground text-xs">You Receive (estimate)</span>
 
             <div className="flex items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm border border-border bg-muted/40 shrink-0">
-                <TokenIcon
-                  symbol="tDNS"
-                  size={20}
-                  colors={`${stock1Color}-${stock2Color}`}
-                />
+                <StDnsTokenIcon stock1={vault.stock1} stock2={vault.stock2} size={20} />
                 <span className="font-semibold text-xs tracking-tight">
                   stDNS-{vault.stock1}{vault.stock2}
                 </span>
               </div>
 
               <div className="flex-1 text-right">
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-transparent text-right font-mono text-xl font-bold text-foreground placeholder:text-muted-foreground/40 outline-none"
-                />
+                <p className="w-full text-right font-mono text-xl font-bold text-foreground">
+                  {formatAtoms(previewShares, STDNS_DECIMALS, 6)}
+                </p>
                 <p className="text-[11px] font-mono text-muted-foreground">
                   ~{principalUsdc} USDC
                 </p>
@@ -244,11 +290,32 @@ export function VaultDepositModal({
             variant="framed"
             size="lg"
             onClick={handleDeposit}
-            disabled={numericAmount <= 0 || numericAmount > userBalance || isSubmitting}
+            disabled={
+              wallet.connected &&
+              (tdnsAtoms <= BigInt(0) || numericAmount > userBalance || isSubmitting || !info || !dns.mints || belowMin || overCap)
+            }
             className="w-full h-11 font-sans font-medium text-sm tracking-wide disabled:opacity-40"
           >
-            {isSubmitting ? "Depositing..." : "Deposit tDNS"}
+            {!wallet.connected
+              ? "Connect Wallet"
+              : !info || !dns.mints
+              ? "Vault not live on devnet"
+              : belowMin
+              ? `Minimum ${formatAtoms(minStake, TDNS_DECIMALS)} tDNS`
+              : overCap
+              ? "Exceeds the vault's remaining capacity"
+              : isSubmitting
+              ? "Requesting..."
+              : "Deposit tDNS"}
           </Button>
+          {dns.mixer && roomLeft !== null && (
+            <p className="text-[11px] font-mono text-muted-foreground text-center" data-room-left={roomLeft.toString()} data-min-stake={minStake.toString()}>
+              Minimum {formatAtoms(minStake, TDNS_DECIMALS)} tDNS. Room left: {formatAtoms(roomLeft, USDC_DECIMALS, 2)} of {formatAtoms(dns.mixer.vaultCapUsdc, USDC_DECIMALS, 0)} USDC.
+            </p>
+          )}
+          <p className="text-[11px] text-muted-foreground text-center">
+            Your tDNS is hedged on both legs at the mirrored mainnet mark, priced with its group and settled to stDNS automatically; until then it shows as pending on My Positions.
+          </p>
 
           <div className="rounded-sm border border-border bg-background/50 p-3 space-y-2.5 text-xs">
             <div>
