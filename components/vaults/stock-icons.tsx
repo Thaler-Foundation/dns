@@ -66,13 +66,11 @@ export function StockPairBadge({
 export function VaultPairBadge({
   stock1,
   stock2,
-  targetToken = "tDNS",
   size = 28,
   className,
 }: {
   stock1: StockTicker;
   stock2: StockTicker;
-  targetToken?: "tDNS";
   size?: number;
   className?: string;
 }) {
@@ -87,11 +85,6 @@ export function VaultPairBadge({
         ticker={stock2}
         size={size}
         className="relative -ml-2.5 z-10 ring-2 ring-background rounded-full"
-      />
-      <TokenIcon
-        symbol={targetToken}
-        size={size}
-        className="relative ml-1 z-0 ring-2 ring-background rounded-full"
       />
     </div>
   );
