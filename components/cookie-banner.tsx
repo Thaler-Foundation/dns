@@ -35,7 +35,7 @@ export function CookieBanner() {
       aria-label="Cookie consent"
       aria-labelledby="slab-cookie-title"
       aria-describedby="slab-cookie-copy"
-      className="fixed inset-x-0 bottom-0 z-[80] border-t border-border bg-card/95 p-4 pt-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
+      className="fixed inset-x-0 bottom-0 z-[80] border-t border-border bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm"
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">

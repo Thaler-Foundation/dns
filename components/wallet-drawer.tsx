@@ -75,7 +75,7 @@ export function WalletDrawer() {
         </DrawerTrigger>
       </div>
 
-      <DrawerContent className="rounded-none sm:rounded-l-none border-y-0 border-r-0 border-l border-border bg-card text-card-foreground shadow-none sm:max-w-md w-full p-0">
+      <DrawerContent className="rounded-none border-y-0 border-r-0 border-l border-border bg-card text-card-foreground shadow-none w-full sm:max-w-md p-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [--drawer-inset:0px]">
         <DrawerHeader className="border-b border-border p-4 flex flex-row items-center justify-between space-y-0">
           <DrawerTitle className="sr-only">Wallet Details</DrawerTitle>
           <div className="flex items-center gap-2.5">
@@ -86,7 +86,8 @@ export function WalletDrawer() {
                 type="button"
                 onClick={handleCopy}
                 title="Copy address"
-                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                aria-label="Copy address"
+                className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               >
                 {copied ? (
                   <Check className="size-3.5 text-emerald-500" />
@@ -101,12 +102,12 @@ export function WalletDrawer() {
             <button
               type="button"
               onClick={() => wallet.logout()}
-              className="relative inline-flex items-center gap-1.5 rounded-none border border-zinc-300 dark:border-white/20 bg-card px-2.5 py-1 text-xs font-sans text-destructive hover:bg-destructive/10 transition-colors before:content-[''] before:absolute before:inset-[2px] before:border before:border-zinc-300/60 dark:before:border-white/10 before:pointer-events-none"
+              className="relative inline-flex items-center gap-1.5 rounded-none border border-zinc-300 dark:border-white/20 bg-card px-2.5 h-9 text-xs font-sans text-destructive hover:bg-destructive/10 transition-colors before:content-[''] before:absolute before:inset-[2px] before:border before:border-zinc-300/60 dark:before:border-white/10 before:pointer-events-none"
             >
               <LogOut className="size-3" />
               <span>Disconnect</span>
             </button>
-            <DrawerClose className="rounded-sm p-1 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
+            <DrawerClose aria-label="Close wallet details" className="inline-flex size-10 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
               <X className="size-4" />
             </DrawerClose>
           </div>
@@ -130,7 +131,7 @@ export function WalletDrawer() {
               type="button"
               onClick={() => setActiveTab("balances")}
               className={cn(
-                "rounded-sm px-3 py-1 text-xs font-medium transition-colors",
+                "rounded-sm px-3 h-9 text-xs font-medium transition-colors",
                 activeTab === "balances"
                   ? "bg-secondary text-secondary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -142,7 +143,7 @@ export function WalletDrawer() {
               type="button"
               onClick={() => setActiveTab("activity")}
               className={cn(
-                "rounded-sm px-3 py-1 text-xs font-medium transition-colors",
+                "rounded-sm px-3 h-9 text-xs font-medium transition-colors",
                 activeTab === "activity"
                   ? "bg-secondary text-secondary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -162,9 +163,9 @@ export function WalletDrawer() {
                 return (
                   <div
                     key={token.symbol}
-                    className="flex items-center justify-between py-3.5"
+                    className="flex min-w-0 items-center justify-between gap-3 py-3.5"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <TokenIcon symbol={token.symbol} size={28} />
                       <div>
                         <div className="font-medium text-sm text-foreground">
@@ -195,8 +196,8 @@ export function WalletDrawer() {
               {stdnsRows.map(({ p, v }) => {
                 const valueUsd = (Number(p.usdcValue) / 10 ** USDC_DECIMALS) * (prices.USDC?.usdPrice ?? 0);
                 return (
-                  <div key={p.vaultId} data-stdns={v.id} className="flex items-center justify-between py-3.5">
-                    <div className="flex items-center gap-3">
+                  <div key={p.vaultId} data-stdns={v.id} className="flex min-w-0 items-center justify-between gap-3 py-3.5">
+                    <div className="flex min-w-0 items-center gap-3">
                       <StDnsTokenIcon stock1={v.stock1} stock2={v.stock2} size={28} />
                       <div>
                         <div className="font-medium text-sm text-foreground">
