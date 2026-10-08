@@ -1,6 +1,3 @@
-import Image from "next/image";
-import { STOCKS, type StockTicker } from "@/lib/vaults-data";
-import { TokenIcon } from "@/components/token-icons";
 import {
   Tooltip,
   TooltipContent,
@@ -8,6 +5,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { STOCKS, type StockTicker } from "@/lib/vaults-data";
+import Image from "next/image";
 
 interface StockIconProps {
   ticker: StockTicker;

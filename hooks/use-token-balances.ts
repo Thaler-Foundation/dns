@@ -7,13 +7,10 @@ import { TOKENS, type TokenSymbol } from "@/lib/tokens";
 
 export type TokenBalances = Record<TokenSymbol, number>;
 
-// Hardcoded tDNS balance shown regardless of on-chain state.
-const HARDCODED_TDNS_BALANCE = 12450;
-
 const DEFAULT_BALANCES: TokenBalances = {
   SOL: 0,
   USDC: 0,
-  tDNS: HARDCODED_TDNS_BALANCE,
+  tDNS: 0,
 };
 
 export function useTokenBalances() {
@@ -125,10 +122,8 @@ export function useTokenBalances() {
     };
   }, [connected, publicKey, connection]);
 
-  const activeBalances: TokenBalances = {
-    ...(connected && publicKey ? balances : DEFAULT_BALANCES),
-    tDNS: HARDCODED_TDNS_BALANCE,
-  };
+  const activeBalances =
+    connected && publicKey ? balances : DEFAULT_BALANCES;
 
   return {
     balances: activeBalances,
