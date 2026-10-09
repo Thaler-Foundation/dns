@@ -26,16 +26,11 @@ export function VaultListRow({ vault }: VaultListRowProps) {
     >
       <td className="py-3 pl-4 pr-3">
         <div className="flex items-center gap-3">
-          <VaultPairBadge
-            stock1={vault.stock1}
-            stock2={vault.stock2}
-            targetToken={vault.targetToken}
-            size={22}
-          />
+          <VaultPairBadge stock1={vault.stock1} stock2={vault.stock2} size={22} />
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
-                {vault.displayName}
+                {vault.pairName}
               </span>
               {hasTokenized && <TokenizedStockBadge />}
             </div>
@@ -58,13 +53,6 @@ export function VaultListRow({ vault }: VaultListRowProps) {
       <td className="py-3 px-3 text-right">
         <span className="text-sm font-bold font-mono text-foreground">
           {formatCurrency(vault.tvl)}
-        </span>
-      </td>
-
-      <td className="py-3 px-3 text-center hidden md:table-cell">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-foreground bg-muted/60 border border-border px-2 py-0.5 rounded-sm">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
-          0.00 β
         </span>
       </td>
 

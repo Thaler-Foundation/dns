@@ -26,16 +26,11 @@ export function VaultCard({ vault }: VaultCardProps) {
       <div>
         <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-border/60">
           <div className="flex items-center gap-2.5 min-w-0">
-            <VaultPairBadge
-              stock1={vault.stock1}
-              stock2={vault.stock2}
-              targetToken={vault.targetToken}
-              size={22}
-            />
+            <VaultPairBadge stock1={vault.stock1} stock2={vault.stock2} size={22} />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h3 className="font-semibold text-sm tracking-tight text-foreground truncate">
-                  {vault.displayName}
+                  {vault.pairName}
                 </h3>
                 {hasTokenized && <TokenizedStockBadge />}
               </div>
@@ -46,17 +41,11 @@ export function VaultCard({ vault }: VaultCardProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 py-3.5 border-b border-border/60">
+        <div className="py-3.5 border-b border-border/60">
           <div>
             <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
             <p className="text-sm font-bold font-mono text-foreground mt-0.5">
               ${vault.tvl.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div className="text-right">
-            <span className="text-[11px] text-muted-foreground block">Strategy Collateral</span>
-            <p className="text-sm font-semibold font-mono text-foreground mt-0.5">
-              100% {vault.targetToken}
             </p>
           </div>
         </div>

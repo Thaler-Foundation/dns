@@ -14,7 +14,7 @@ const itemClass =
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-border pt-[env(safe-area-inset-bottom)]">
+    <footer className="mt-auto border-t border-border pb-[env(safe-area-inset-bottom)]">
       <nav
         aria-label="Legal"
         className="flex h-14 w-full min-w-0 flex-wrap items-center justify-center gap-x-4 px-4"

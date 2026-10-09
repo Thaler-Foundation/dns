@@ -63,7 +63,7 @@ export default function VaultsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
-                  Smart Vaults
+                  Delta Vaults
                 </h1>
                 <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
                   <span className="size-1.5 rounded-full bg-emerald-500" />
@@ -187,7 +187,6 @@ export default function VaultsPage() {
                     <th className="py-2.5 pl-4 pr-3 font-medium">Vault Strategy</th>
                     <th className="py-2.5 px-3 font-medium hidden sm:table-cell">Composition</th>
                     <th className="py-2.5 px-3 font-medium text-right">TVL</th>
-                    <th className="py-2.5 px-3 font-medium text-center hidden md:table-cell">Delta Beta</th>
                     <th className="py-2.5 px-3 font-medium text-right">Net APY</th>
                     <th className="py-2.5 pl-3 pr-4 font-medium text-right">Action</th>
                   </tr>

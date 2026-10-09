@@ -101,16 +101,11 @@ function VaultDetailContent({ id }: { id: string }) {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <VaultPairBadge
-            stock1={vault.stock1}
-            stock2={vault.stock2}
-            targetToken={vault.targetToken}
-            size={32}
-          />
+          <VaultPairBadge stock1={vault.stock1} stock2={vault.stock2} size={32} />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                {vault.displayName}
+                {vault.pairName}
               </h1>
               <span className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-muted text-muted-foreground border border-border">
                 {vault.category}

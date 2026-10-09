@@ -9,25 +9,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { StDnsTokenIcon, StockIcon, TokenizedStockBadge } from "@/components/vaults/stock-icons";
+import { useDns } from "@/hooks/use-dns";
+import { useDnsSend } from "@/hooks/use-dns-send";
+import { useDnsWallet } from "@/hooks/use-dns-wallet";
+import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
+import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, sharesForAssets, tdnsToUsdcAtoms } from "@/lib/dns/math";
+import { readStakeTarget } from "@/lib/dns/stake";
+import { requestStakeIxs } from "@/lib/dns/tx";
 import {
-  STOCKS,
   type VaultStrategy,
-  hasTokenizedStock,
   getStockColor,
+  hasTokenizedStock
 } from "@/lib/vaults-data";
+import { useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { Wallet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useDnsWallet } from "@/hooks/use-dns-wallet";
-import { useTokenBalances } from "@/hooks/use-token-balances";
-import { useDns } from "@/hooks/use-dns";
-import { useDnsSend } from "@/hooks/use-dns-send";
-import { requestStakeIxs } from "@/lib/dns/tx";
-import { readStakeTarget } from "@/lib/dns/stake";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
-import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, sharesForAssets, tdnsToUsdcAtoms } from "@/lib/dns/math";
 
 interface VaultDepositModalProps {
   vault: VaultStrategy;
