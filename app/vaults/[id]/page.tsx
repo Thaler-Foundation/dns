@@ -10,6 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
+import { deployedUsdc, formatUsdc, lastMirrorRead, vaultTvlUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -19,11 +20,11 @@ function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures 
       <>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Long {stock}</span>
-          <span className="font-semibold text-muted-foreground">24% target, no position yet</span>
+          <span className="font-semibold text-muted-foreground">no position yet</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Short {stock}</span>
-          <span className="font-semibold text-muted-foreground">24% target, no position yet</span>
+          <span className="font-semibold text-muted-foreground">no position yet</span>
         </div>
       </>
     );
@@ -74,6 +75,7 @@ function VaultDetailContent({ id }: { id: string }) {
   const wallet = useDnsWallet();
   const dns = useDns();
   const info = vault ? dns.vaults[vault.id] : undefined;
+  const mirrorRead = lastMirrorRead(info);
   const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
   const position = wallet.connected && held ? held.atoms : BigInt(0);
   const positionUsdc = info ? assetsForShares(position, info.navUsdc, info.shareSupply) : BigInt(0);
@@ -122,7 +124,7 @@ function VaultDetailContent({ id }: { id: string }) {
           <div className="text-right sm:text-left">
             <span className="text-[11px] text-muted-foreground block font-mono">Net APY</span>
             <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-              {vault.apy.toFixed(2)}%
+              n/a
             </span>
           </div> 
         </div>
@@ -134,7 +136,7 @@ function VaultDetailContent({ id }: { id: string }) {
             Your Position
           </span>
           <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-            {vault.apy.toFixed(2)}% APY
+            APY n/a
           </span>
         </div>
 
@@ -224,42 +226,28 @@ function VaultDetailContent({ id }: { id: string }) {
         )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Underlying Collateral:</span>
-            <span className="font-medium text-foreground">96% USDC</span>
+            <span className="text-muted-foreground">Deployed to the hedge:</span>
+            <span className="font-medium text-foreground">{formatUsdc(deployedUsdc(info))}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Liquidity Buffer:</span>
-            <span className="font-medium text-foreground">4% USDC</span>
+            <span className="text-muted-foreground">Pending stake:</span>
+            <span className="font-medium text-foreground">{info ? formatUsdc(info.pendingStakeUsdc) : "n/a"}</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="rounded-sm border border-border bg-card p-3.5">
           <span className="text-[11px] text-muted-foreground block font-mono">TVL</span>
           <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-            ${vault.tvl.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            {formatUsdc(vaultTvlUsdc(info))}
           </span>
         </div>
 
         <div className="rounded-sm border border-border bg-card p-3.5">
-          <span className="text-[11px] text-muted-foreground block font-mono">Sharpe Ratio (30D)</span>
+          <span className="text-[11px] text-muted-foreground block font-mono">Last mirror read</span>
           <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-            2.48
-          </span>
-        </div>
-
-        <div className="rounded-sm border border-border bg-card p-3.5">
-          <span className="text-[11px] text-muted-foreground block font-mono">Rebalance</span>
-          <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-            Epoch / 24h
-          </span>
-        </div>
-
-        <div className="rounded-sm border border-border bg-card p-3.5">
-          <span className="text-[11px] text-muted-foreground block font-mono">Service Fee</span>
-          <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-            11.00%
+            {mirrorRead ? new Date(mirrorRead.atMs).toISOString().slice(11, 19) + " UTC" : "n/a"}
           </span>
         </div>
       </div>

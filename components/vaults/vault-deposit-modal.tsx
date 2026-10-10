@@ -167,7 +167,7 @@ export function VaultDepositModal({
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Strategy APY</p>
               <p className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
-                {vault.apy.toFixed(2)}%
+                n/a
               </p>
               <p className="text-[11px] text-muted-foreground">Auto-compounding</p>
             </div>
