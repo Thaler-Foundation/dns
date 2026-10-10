@@ -38,9 +38,6 @@ export function VaultCard({ vault }: VaultCardProps) {
                 </h3>
                 {hasTokenized && <TokenizedStockBadge />}
               </div>
-              <p className="text-[11px] text-muted-foreground truncate">
-                Dual Long & Short · {vault.stock1} & {vault.stock2}
-              </p>
             </div>
           </div>
         </div>
@@ -58,6 +55,7 @@ export function VaultCard({ vault }: VaultCardProps) {
       <div className="flex items-center justify-between gap-3 pt-3.5">
         <div>
           <span className="text-[11px] text-muted-foreground block">Net APY</span>
+          {/* TODO: add net APY calculation */}
           <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">
             n/a
           </span>

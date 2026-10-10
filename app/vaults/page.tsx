@@ -67,13 +67,9 @@ export default function VaultsPage() {
                 </h1>
                 <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
                   <span className="size-1.5 rounded-full bg-emerald-500" />
-                  xStocks Active
+                  xStocks
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-lg">
-                Automated delta-neutral yield on Solana using tokenized stocks (xStocks). Dual long/short hedging
-                with 100% tDNS collateral.
-              </p>
             </div>
 
             <div className="flex items-center gap-5 shrink-0 self-start sm:self-end">

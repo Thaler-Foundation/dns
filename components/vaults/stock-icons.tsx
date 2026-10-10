@@ -110,10 +110,19 @@ export function TokenizedStockBadge({
           <span className="size-1 rounded-full bg-emerald-500 animate-pulse" />
           <span>{text}</span>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-center text-xs leading-relaxed flex flex-col items-center">
+        <TooltipContent side="top" className="max-w-xs text-center text-xs leading-relaxed flex flex-col items-center gap-0">
           <p className="font-semibold">Tokenized Stock (xStock)</p>
           <p className="text-[11px] opacity-80 mt-0.5">
-            Synthetic on-chain asset on Solana tracking real-time equity pricing 24/7. Not traditional stock held in a TradFi brokerage.
+            Each token is backed by one real share. Trades 24/7, and dividends are added to your balance automatically.
+            <a
+              href="https://docs.xstocks.fi"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="block w-fit mx-auto underline underline-offset-2"
+            >
+              Learn more
+            </a>
           </p>
         </TooltipContent>
       </Tooltip>
