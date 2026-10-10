@@ -19,7 +19,7 @@ export function totalTvlUsdc(infos: (DnsVaultInfo | undefined)[]): bigint | null
 }
 
 export function formatUsdc(atoms: bigint | null): string {
-  if (atoms === null) return "n/a";
+  if (atoms === null) return "$0";
   const amount = Number(atoms) / USDC_ATOMS;
   if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(2)}M`;
   if (amount >= 1_000) return `$${(amount / 1_000).toFixed(1)}K`;

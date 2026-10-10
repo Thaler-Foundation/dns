@@ -128,7 +128,11 @@ export function VaultDepositModal({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  const principalUsdc = totalUsdc.toLocaleString("en-US", {
+  const totalUsdcLabel = totalUsdc.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const principalUsdc = (totalUsdc * 0.96).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -166,6 +170,7 @@ export function VaultDepositModal({
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Strategy APY</p>
+              {/* TODO: add strategy APY calculation */}
               <p className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
                 n/a
               </p>
@@ -238,7 +243,7 @@ export function VaultDepositModal({
                   {formatAtoms(previewShares, STDNS_DECIMALS, 6)}
                 </p>
                 <p className="text-[11px] font-mono text-muted-foreground">
-                  ~{principalUsdc} USDC
+                  ~{totalUsdcLabel} USDC
                 </p>
               </div>
             </div>
@@ -268,14 +273,14 @@ export function VaultDepositModal({
                   className="size-1.5 shrink-0 border border-border/40"
                   style={{ backgroundColor: stock1Color }}
                 />
-                Long & Short {vault.stock1} (48%)
+                {vault.stock1} (48%)
               </span>
               <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground/80">
                 <span className="size-1.5 shrink-0 border border-border/40 bg-muted-foreground/50" />
                 4% Buffer
               </span>
               <span className="flex items-center gap-1.5">
-                Long & Short {vault.stock2} (48%)
+                {vault.stock2} (48%)
                 <span
                   className="size-1.5 shrink-0 border border-border/40"
                   style={{ backgroundColor: stock2Color }}
@@ -313,7 +318,7 @@ export function VaultDepositModal({
             </p>
           )}
           <p className="text-[11px] text-muted-foreground text-center">
-            Your tDNS is hedged on both legs at the mirrored mainnet mark, priced with its group and settled to stDNS automatically; until then it shows as pending on My Positions.
+            Your deposit is protected from price swings and converts to stDNS at the next batch price.
           </p>
 
           <div className="rounded-sm border border-border bg-background/50 p-3 space-y-2.5 text-xs">
@@ -328,7 +333,7 @@ export function VaultDepositModal({
                 </div>
                 <div className="text-right font-mono">
                   <p className="text-foreground">
-                    {(Number(principalUsdc) - Number(bufferAmount)).toFixed(2)} USDC
+                    {principalUsdc} USDC
                   </p>
                 </div>
               </div>
