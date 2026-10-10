@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
-import { type VaultStrategy, formatCurrency, hasTokenizedStock } from "@/lib/vaults-data";
+import { useDns } from "@/hooks/use-dns";
+import { formatUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 import { ChevronRight } from "lucide-react";
 
 interface VaultListRowProps {
@@ -13,6 +15,8 @@ interface VaultListRowProps {
 export function VaultListRow({ vault }: VaultListRowProps) {
   const router = useRouter();
   const hasTokenized = hasTokenizedStock(vault);
+  const dns = useDns();
+  const tvl = formatUsdc(vaultTvlUsdc(dns.vaults[vault.id]));
 
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -52,13 +56,13 @@ export function VaultListRow({ vault }: VaultListRowProps) {
 
       <td className="py-3 px-3 text-right">
         <span className="text-sm font-bold font-mono text-foreground">
-          {formatCurrency(vault.tvl)}
+          {tvl}
         </span>
       </td>
 
       <td className="py-3 px-3 text-right">
         <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
-          {vault.apy.toFixed(2)}%
+          n/a
         </span>
       </td>
 

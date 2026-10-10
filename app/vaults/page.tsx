@@ -5,25 +5,24 @@ import { SiteHeader } from "@/components/site-header";
 import { VaultCard } from "@/components/vaults/vault-card";
 import { VaultListRow } from "@/components/vaults/vault-list-row";
 import { cn } from "@/lib/utils";
-import { VAULT_STRATEGIES, formatCurrency, getTotalTvl } from "@/lib/vaults-data";
-import { ArrowDownUp, LayoutGrid, List, Search } from "lucide-react";
+import { useDns } from "@/hooks/use-dns";
+import { formatUsdc, hedgedVaultCount, totalTvlUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { VAULT_STRATEGIES } from "@/lib/vaults-data";
+import { LayoutGrid, List, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type ViewMode = "grid" | "list";
 type CategoryFilter = "All" | "High Yield" | "Semiconductors" | "Tech Mega-cap" | "Cloud";
-type SortOption = "apy" | "tvl";
 
 export default function VaultsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("All");
-  const [sortBy, setSortBy] = useState<SortOption>("apy");
+  const dns = useDns();
 
-  const totalTvl = useMemo(() => getTotalTvl(), []);
-  const avgApy = useMemo(() => {
-    const sum = VAULT_STRATEGIES.reduce((acc, v) => acc + v.apy, 0);
-    return (sum / VAULT_STRATEGIES.length).toFixed(1);
-  }, []);
+  const infos = useMemo(() => VAULT_STRATEGIES.map((v) => dns.vaults[v.id]), [dns.vaults]);
+  const totalTvl = useMemo(() => totalTvlUsdc(infos), [infos]);
+  const hedged = useMemo(() => hedgedVaultCount(infos), [infos]);
 
   const filteredVaults = useMemo(() => {
     return VAULT_STRATEGIES.filter((vault) => {
@@ -44,10 +43,11 @@ export default function VaultsPage() {
 
       return matchesCategory && matchesSearch;
     }).sort((a, b) => {
-      if (sortBy === "apy") return b.apy - a.apy;
-      return b.tvl - a.tvl;
+      const tvlA = vaultTvlUsdc(dns.vaults[a.id]) ?? BigInt(0);
+      const tvlB = vaultTvlUsdc(dns.vaults[b.id]) ?? BigInt(0);
+      return tvlA === tvlB ? 0 : tvlA > tvlB ? -1 : 1;
     });
-  }, [category, search, sortBy]);
+  }, [category, search, dns.vaults]);
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-background selection:bg-primary/20">
@@ -80,13 +80,13 @@ export default function VaultsPage() {
               <div>
                 <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
                 <span className="text-xl font-bold font-mono text-foreground">
-                  {formatCurrency(totalTvl)}
+                  {formatUsdc(totalTvl)}
                 </span>
               </div>
               <div className="border-l border-border pl-5">
-                <span className="text-[11px] text-muted-foreground block">Avg. APY</span>
-                <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                  {avgApy}%
+                <span className="text-[11px] text-muted-foreground block">Hedged vaults</span>
+                <span className="text-xl font-bold font-mono text-foreground">
+                  {hedged} / {VAULT_STRATEGIES.length}
                 </span>
               </div>
             </div>
@@ -124,16 +124,6 @@ export default function VaultsPage() {
                   className="w-full h-8 pl-8 pr-3 text-xs rounded-sm border border-border bg-card placeholder:text-muted-foreground/60 text-foreground outline-none focus:border-primary transition-colors"
                 />
               </div>
-
-              <button
-                type="button"
-                onClick={() => setSortBy((prev) => (prev === "apy" ? "tvl" : "apy"))}
-                className="h-8 px-2.5 flex items-center gap-1.5 rounded-sm border border-border bg-card text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
-                title={`Sorting by ${sortBy.toUpperCase()}`}
-              >
-                <ArrowDownUp className="size-3.5" />
-                <span className="font-mono uppercase text-[11px]">{sortBy}</span>
-              </button>
 
               <div className="flex items-center border border-border rounded-sm p-0.5 bg-card shrink-0">
                 <button

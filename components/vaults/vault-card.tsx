@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
+import { useDns } from "@/hooks/use-dns";
+import { formatUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
@@ -12,6 +14,8 @@ interface VaultCardProps {
 export function VaultCard({ vault }: VaultCardProps) {
   const router = useRouter();
   const hasTokenized = hasTokenizedStock(vault);
+  const dns = useDns();
+  const tvl = formatUsdc(vaultTvlUsdc(dns.vaults[vault.id]));
 
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,7 +49,7 @@ export function VaultCard({ vault }: VaultCardProps) {
           <div>
             <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
             <p className="text-sm font-bold font-mono text-foreground mt-0.5">
-              ${vault.tvl.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {tvl}
             </p>
           </div>
         </div>
@@ -55,7 +59,7 @@ export function VaultCard({ vault }: VaultCardProps) {
         <div>
           <span className="text-[11px] text-muted-foreground block">Net APY</span>
           <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">
-            {vault.apy.toFixed(2)}%
+            n/a
           </span>
         </div>
 
