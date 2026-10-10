@@ -31,13 +31,11 @@ export function VaultCard({ vault }: VaultCardProps) {
         <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-border/60">
           <div className="flex items-center gap-2.5 min-w-0">
             <VaultPairBadge stock1={vault.stock1} stock2={vault.stock2} size={22} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="font-semibold text-sm tracking-tight text-foreground truncate">
-                  {vault.pairName}
-                </h3>
-                {hasTokenized && <TokenizedStockBadge />}
-              </div>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h3 className="font-semibold text-base leading-[22px] tracking-tight text-foreground truncate">
+                {vault.pairName}
+              </h3>
+              {hasTokenized && <TokenizedStockBadge />}
             </div>
           </div>
         </div>
