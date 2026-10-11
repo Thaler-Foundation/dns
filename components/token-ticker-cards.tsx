@@ -77,7 +77,7 @@ export function TokenTickerCards({ prices }: TokenTickerCardsProps) {
               <div className="font-mono font-semibold text-xs text-card-foreground tabular-nums sm:text-sm">
                 ${usdPrice < 0.01
                   ? usdPrice.toFixed(4)
-                  : usdPrice.toLocaleString(undefined, {
+                  : usdPrice.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 4,
                     })}
