@@ -31,16 +31,11 @@ export function VaultCard({ vault }: VaultCardProps) {
         <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-border/60">
           <div className="flex items-center gap-2.5 min-w-0">
             <VaultPairBadge stock1={vault.stock1} stock2={vault.stock2} size={22} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="font-semibold text-sm tracking-tight text-foreground truncate">
-                  {vault.pairName}
-                </h3>
-                {hasTokenized && <TokenizedStockBadge />}
-              </div>
-              <p className="text-[11px] text-muted-foreground truncate">
-                Dual Long & Short · {vault.stock1} & {vault.stock2}
-              </p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h3 className="font-semibold text-base leading-[22px] tracking-tight text-foreground truncate">
+                {vault.pairName}
+              </h3>
+              {hasTokenized && <TokenizedStockBadge />}
             </div>
           </div>
         </div>
@@ -58,6 +53,7 @@ export function VaultCard({ vault }: VaultCardProps) {
       <div className="flex items-center justify-between gap-3 pt-3.5">
         <div>
           <span className="text-[11px] text-muted-foreground block">Net APY</span>
+          {/* TODO: add net APY calculation */}
           <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">
             n/a
           </span>

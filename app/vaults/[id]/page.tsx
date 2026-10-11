@@ -123,6 +123,7 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="flex items-center gap-4 self-start sm:self-auto shrink-0">
           <div className="text-right sm:text-left">
             <span className="text-[11px] text-muted-foreground block font-mono">Net APY</span>
+            {/* TODO: add net APY calculation */}
             <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
               n/a
             </span>
@@ -135,6 +136,7 @@ function VaultDetailContent({ id }: { id: string }) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Your Position
           </span>
+          {/* TODO: add Position APY calculation */}
           <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
             APY n/a
           </span>
@@ -175,14 +177,11 @@ function VaultDetailContent({ id }: { id: string }) {
       </div>
 
       <div className="rounded-sm border border-border bg-card p-5 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-border/60">
+        <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-foreground tracking-tight">
-              Dual Long & Short
+              Dual Neutral Pair
             </h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Simultaneous delta neutral positions on both equities eliminate directional exposure.
-            </p>
           </div>
         </div>
 
