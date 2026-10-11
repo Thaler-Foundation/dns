@@ -42,3 +42,8 @@ export function sharesForAssets(assets: bigint, navUsdc: bigint, shareSupply: bi
 export function assetsForShares(shares: bigint, navUsdc: bigint, shareSupply: bigint): bigint {
   return (shares * (navUsdc + VIRTUAL_ASSETS)) / (shareSupply + VIRTUAL_SHARES);
 }
+
+// settle_stake.rs member_share: a member's pro-rata share of its group's shares, rounded down.
+export function memberShare(usdc: bigint, sharesTotal: bigint, totalUsdc: bigint): bigint {
+  return (usdc * sharesTotal) / totalUsdc;
+}

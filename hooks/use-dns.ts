@@ -119,6 +119,7 @@ export function DnsProvider({ children }: { children: ReactNode }) {
           return found.map((f) => ({ address: address(f.pubkey.toBase58()), data: new Uint8Array(f.account.data) }));
         },
         getMultiple,
+        next.mixer?.legsRequired ?? null,
       );
       if (ownerRef.current === owner) setPending({ owner, list: requests });
     } catch {

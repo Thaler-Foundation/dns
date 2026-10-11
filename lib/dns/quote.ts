@@ -37,9 +37,38 @@ export function fillLeg(usdc: bigint, markTicks: bigint, p: LegParams, multiplie
   return { raw, lots, proceeds, fee, buyFee: usdc - notional, collateral: usdc - fee };
 }
 
-// Spot at the mark plus collateral; the short's unrealised term is zero at the mark it was filled at.
+// nav.rs leg_value_quote_lots: spot at the mark plus collateral plus the short's unrealised term.
+export function legValue(raw: bigint, multiplierMicros: bigint, p: LegParams, markTicks: bigint, collateral: bigint, virtualQuote: bigint, shortLots: bigint): bigint {
+  return spotValueQuoteLots(scaledAmount(raw, multiplierMicros), p, markTicks) + collateral + virtualQuote - shortLots * markTicks * p.tickSize;
+}
+
+// A leg valued at the mark it was filled at, where the short's unrealised term is zero.
 export function legValueAtMark(raw: bigint, multiplierMicros: bigint, p: LegParams, markTicks: bigint, collateral: bigint): bigint {
   return spotValueQuoteLots(scaledAmount(raw, multiplierMicros), p, markTicks) + collateral;
+}
+
+export type StakeGroupFills = {
+  total_usdc: bigint;
+  leg_a_done: number;
+  leg_a_spot_raw: bigint;
+  leg_a_collateral: bigint;
+  leg_a_short_lots: bigint;
+  leg_a_virtual_quote: bigint;
+  leg_b_done: number;
+  leg_b_spot_raw: bigint;
+  leg_b_collateral: bigint;
+  leg_b_short_lots: bigint;
+  leg_b_virtual_quote: bigint;
+};
+
+// price_group.rs for an executing group: the USDC its done legs have not spent plus those legs valued at the current marks.
+export function groupValueFromFills(g: StakeGroupFills, v: DnsVaultInfo): bigint | null {
+  if (!v.hedge) return null;
+  const legsDone = BigInt(g.leg_a_done) + BigInt(g.leg_b_done);
+  let value = g.total_usdc - (g.total_usdc / TDNS_PEG_USDC) * LEG_USDC_PERCENT * legsDone;
+  if (g.leg_a_done === 1) value += legValue(g.leg_a_spot_raw, v.hedge.multipliers.a, legParams(v, "A"), v.hedge.marks.a, g.leg_a_collateral, g.leg_a_virtual_quote, g.leg_a_short_lots);
+  if (g.leg_b_done === 1) value += legValue(g.leg_b_spot_raw, v.hedge.multipliers.b, legParams(v, "B"), v.hedge.marks.b, g.leg_b_collateral, g.leg_b_virtual_quote, g.leg_b_short_lots);
+  return value;
 }
 
 function legParams(v: DnsVaultInfo, leg: "A" | "B"): LegParams {
