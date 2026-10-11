@@ -14,7 +14,9 @@ import { useDnsSend } from "@/hooks/use-dns-send";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
-import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, sharesForAssets, tdnsToUsdcAtoms } from "@/lib/dns/math";
+import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, tdnsToUsdcAtoms } from "@/lib/dns/math";
+import { quoteStakeShares } from "@/lib/dns/quote";
+import { formatRate, stdnsRateUsdc } from "@/lib/dns/stats";
 import { readStakeTarget } from "@/lib/dns/stake";
 import { requestStakeIxs } from "@/lib/dns/tx";
 import {
@@ -52,9 +54,12 @@ export function VaultDepositModal({
   const { connection } = useConnection();
   const info = dns.vaults[vault.id];
   const tdnsAtoms = parseAtoms(amount, TDNS_DECIMALS) ?? BigInt(0);
+  const legsRequired = dns.mixer?.legsRequired ?? null;
   const previewShares =
     info && tdnsAtoms > BigInt(0)
-      ? sharesForAssets(tdnsToUsdcAtoms(tdnsAtoms), info.navUsdc, info.shareSupply)
+      ? legsRequired === null
+        ? null
+        : quoteStakeShares(tdnsToUsdcAtoms(tdnsAtoms), info, legsRequired)
       : BigInt(0);
   const hasTokenized = hasTokenizedStock(vault);
   const minStake = dns.mixer?.minStakeTdns ?? BigInt(0);
@@ -229,6 +234,7 @@ export function VaultDepositModal({
           </div>
           <div className="rounded-sm border border-border bg-background/50 p-3.5">
             <span className="text-muted-foreground text-xs">You Receive (estimate)</span>
+            <p className="text-[11px] font-mono text-muted-foreground">{formatRate(stdnsRateUsdc(info))}</p>
 
             <div className="flex items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm border border-border bg-muted/40 shrink-0">
@@ -240,7 +246,7 @@ export function VaultDepositModal({
 
               <div className="flex-1 text-right">
                 <p className="w-full text-right font-mono text-xl font-bold text-foreground">
-                  {formatAtoms(previewShares, STDNS_DECIMALS, 6)}
+                  {previewShares === null ? "n/a" : formatAtoms(previewShares, STDNS_DECIMALS, 6)}
                 </p>
                 <p className="text-[11px] font-mono text-muted-foreground">
                   ~{totalUsdcLabel} USDC

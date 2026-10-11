@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
-import { formatUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { formatRate, formatUsdc, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
@@ -16,6 +16,7 @@ export function VaultCard({ vault }: VaultCardProps) {
   const hasTokenized = hasTokenizedStock(vault);
   const dns = useDns();
   const tvl = formatUsdc(vaultTvlUsdc(dns.vaults[vault.id]));
+  const rate = formatRate(stdnsRateUsdc(dns.vaults[vault.id]));
 
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,6 +46,12 @@ export function VaultCard({ vault }: VaultCardProps) {
             <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
             <p className="text-sm font-bold font-mono text-foreground mt-0.5">
               {tvl}
+            </p>
+          </div>
+          <div className="mt-2">
+            <span className="text-[11px] text-muted-foreground block">stDNS Rate</span>
+            <p className="text-xs font-mono text-foreground mt-0.5">
+              {rate}
             </p>
           </div>
         </div>

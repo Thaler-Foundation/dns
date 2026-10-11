@@ -10,7 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatUsdc, lastMirrorRead, vaultTvlUsdc } from "@/lib/dns/stats";
+import { deployedUsdc, formatRate, formatUsdc, lastMirrorRead, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -235,11 +235,18 @@ function VaultDetailContent({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-sm border border-border bg-card p-3.5">
           <span className="text-[11px] text-muted-foreground block font-mono">TVL</span>
           <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
             {formatUsdc(vaultTvlUsdc(info))}
+          </span>
+        </div>
+
+        <div className="rounded-sm border border-border bg-card p-3.5">
+          <span className="text-[11px] text-muted-foreground block font-mono">stDNS Rate</span>
+          <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
+            {formatRate(stdnsRateUsdc(info))}
           </span>
         </div>
 

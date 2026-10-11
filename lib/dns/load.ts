@@ -20,6 +20,7 @@ export type DnsHedge = {
   mainnetSlot: number;
   capturedAtMs: number;
   marks: { a: bigint; b: bigint };
+  multipliers: { a: bigint; b: bigint };
   legs: { a: DnsHedgeLeg; b: DnsHedgeLeg };
 };
 
@@ -47,7 +48,7 @@ export type DnsVaultParams = {
   spotDecimalsB: number;
 };
 
-export type DnsMixerLimits = { minStakeTdns: bigint; vaultCapUsdc: bigint; redeemCooldownSlots: bigint };
+export type DnsMixerLimits = { minStakeTdns: bigint; vaultCapUsdc: bigint; redeemCooldownSlots: bigint; legsRequired: number };
 
 export type DnsSnapshot = {
   mints: DnsMints | null;
@@ -74,6 +75,7 @@ type VaultRow = {
     mainnetSlot: number;
     capturedAtMs: number;
     marks: { a: string; b: string };
+    multipliers: { a: string; b: string };
     legs: { a: HedgeLegRow; b: HedgeLegRow };
   } | null;
 };
@@ -109,7 +111,7 @@ export async function loadDns(
       problems.push("the DNS mixer is not deployed on this cluster");
     } else {
       const m = client.decodeMixerPool(data);
-      limits = { minStakeTdns: m.min_stake_tdns, vaultCapUsdc: m.vault_cap_usdc, redeemCooldownSlots: m.redeem_cooldown_slots };
+      limits = { minStakeTdns: m.min_stake_tdns, vaultCapUsdc: m.vault_cap_usdc, redeemCooldownSlots: m.redeem_cooldown_slots, legsRequired: m.legs_required };
       if (config.usdcMint && m.usdc_mint !== config.usdcMint) {
         problems.push(`USDC mint ${config.usdcMint} is not the program's ${m.usdc_mint}`);
       } else if (config.tdnsMint && m.tdns_mint !== config.tdnsMint) {
@@ -161,6 +163,7 @@ export async function loadDns(
                 mainnetSlot: row.hedge.mainnetSlot,
                 capturedAtMs: row.hedge.capturedAtMs,
                 marks: { a: BigInt(row.hedge.marks.a), b: BigInt(row.hedge.marks.b) },
+                multipliers: { a: BigInt(row.hedge.multipliers.a), b: BigInt(row.hedge.multipliers.b) },
                 legs: { a: hedgeLeg(row.hedge.legs.a), b: hedgeLeg(row.hedge.legs.b) },
               }
             : null,

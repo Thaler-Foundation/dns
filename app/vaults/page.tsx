@@ -173,6 +173,7 @@ export default function VaultsPage() {
                     <th className="py-2.5 pl-4 pr-3 font-medium">Vault Strategy</th>
                     <th className="py-2.5 px-3 font-medium hidden sm:table-cell">Composition</th>
                     <th className="py-2.5 px-3 font-medium text-right">TVL</th>
+                    <th className="py-2.5 px-3 font-medium text-right">stDNS Rate (USDC)</th>
                     <th className="py-2.5 px-3 font-medium text-right">Net APY</th>
                     <th className="py-2.5 pl-3 pr-4 font-medium text-right">Action</th>
                   </tr>
