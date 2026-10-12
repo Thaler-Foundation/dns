@@ -57,3 +57,16 @@ export function formatRateUsdc(atoms: bigint | null): string {
 export function formatRate(atoms: bigint | null): string {
   return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
 }
+
+export function formatSignedUsdc(atoms: bigint): string {
+  const sign = atoms < BigInt(0) ? "-" : "+";
+  const abs = atoms < BigInt(0) ? -atoms : atoms;
+  return `${sign}$${(Number(abs) / USDC_ATOMS).toFixed(2)}`;
+}
+
+// Cushion share of net income, floored like the program's cushion_bps: 10% at zero 7-day NAV pressure, 33% at full pressure.
+export function cushionPercent(pressureBps: number | null): string {
+  if (pressureBps === null) return "n/a";
+  const bps = 1000 + Math.floor((2300 * pressureBps) / 10000);
+  return `${(bps / 100).toFixed(2).replace(/\.?0+$/, "")}%`;
+}
