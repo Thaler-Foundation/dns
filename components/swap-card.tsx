@@ -206,7 +206,7 @@ export function SwapCard() {
               <span className="flex items-center gap-1.5">
                 <WalletIcon className="size-3.5 text-muted-foreground" />
                 <span className="font-mono">
-                  {sellBalance.toLocaleString(undefined, {
+                  {sellBalance.toLocaleString("en-US", {
                     maximumFractionDigits: 5,
                   })}{" "}
                   {sellToken}
@@ -256,7 +256,7 @@ export function SwapCard() {
 
           <div className="mt-2 font-mono text-xs text-muted-foreground">
             {sellUsd > 0
-              ? `≈ $${sellUsd.toLocaleString(undefined, {
+              ? `≈ $${sellUsd.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`
@@ -283,7 +283,7 @@ export function SwapCard() {
             <span className="flex items-center gap-1.5">
               <WalletIcon className="size-3.5 text-muted-foreground" />
               <span className="font-mono">
-                {buyBalance.toLocaleString(undefined, {
+                {buyBalance.toLocaleString("en-US", {
                   maximumFractionDigits: 5,
                 })}{" "}
                 {buyToken}
@@ -315,7 +315,7 @@ export function SwapCard() {
 
           <div className="mt-2 font-mono text-xs text-muted-foreground">
             {buyUsd > 0
-              ? `≈ $${buyUsd.toLocaleString(undefined, {
+              ? `≈ $${buyUsd.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`
@@ -329,7 +329,7 @@ export function SwapCard() {
             1 {sellToken} ≈{" "}
             {rate < 0.0001
               ? rate.toFixed(6)
-              : rate.toLocaleString(undefined, {
+              : rate.toLocaleString("en-US", {
                   maximumFractionDigits: 4,
                 })}{" "}
             {buyToken}

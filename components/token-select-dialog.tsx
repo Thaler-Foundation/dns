@@ -95,7 +95,7 @@ export function TokenSelectDialog({
                 <div className="flex items-center gap-3 text-right">
                   <div>
                     <div className="font-mono text-sm font-medium text-foreground">
-                      {balance.toLocaleString(undefined, {
+                      {balance.toLocaleString("en-US", {
                         maximumFractionDigits: 4,
                       })}
                     </div>
@@ -103,7 +103,7 @@ export function TokenSelectDialog({
                       <div className="font-mono text-xs text-muted-foreground">
                         ${priceInfo.usdPrice < 0.01
                           ? priceInfo.usdPrice.toFixed(4)
-                          : priceInfo.usdPrice.toLocaleString(undefined, {
+                          : priceInfo.usdPrice.toLocaleString("en-US", {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}

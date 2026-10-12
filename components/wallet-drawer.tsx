@@ -119,7 +119,7 @@ export function WalletDrawer() {
               Total Balance
             </div>
             <div className="font-mono text-3xl font-semibold text-foreground mt-1 tabular-nums">
-              ${totalUsd.toLocaleString(undefined, {
+              ${totalUsd.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -179,12 +179,12 @@ export function WalletDrawer() {
 
                     <div className="text-right">
                       <div className="font-mono text-sm font-medium text-foreground tabular-nums">
-                        {balance.toLocaleString(undefined, {
+                        {balance.toLocaleString("en-US", {
                           maximumFractionDigits: 5,
                         })}
                       </div>
                       <div className="font-mono text-xs text-muted-foreground tabular-nums">
-                        ${valueUsd.toLocaleString(undefined, {
+                        ${valueUsd.toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -213,7 +213,7 @@ export function WalletDrawer() {
                         {formatAtoms(p.atoms, STDNS_DECIMALS, 5)}
                       </div>
                       <div className="font-mono text-xs text-muted-foreground tabular-nums">
-                        ${valueUsd.toLocaleString(undefined, {
+                        ${valueUsd.toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}

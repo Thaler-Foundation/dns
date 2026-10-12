@@ -189,7 +189,7 @@ export function VaultDepositModal({
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1">
                   <Wallet className="size-3" />
-                  {userBalance.toLocaleString()} tDNS
+                  {userBalance.toLocaleString("en-US")} tDNS
                 </span>
                 <button
                   type="button"
