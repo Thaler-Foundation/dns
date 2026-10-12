@@ -141,7 +141,9 @@ export default function PositionsPage() {
                           <p className="text-xs font-mono text-muted-foreground">
                             {q.status === "refunding"
                               ? "tDNS returns to your wallet"
-                              : `${q.sharesExact ? "" : "~"}${formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS${q.sharesExact ? "" : " (estimate)"}`}
+                              : q.shares === null
+                                ? "estimate n/a"
+                                : `${q.sharesExact ? "" : "~"}${formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS${q.sharesExact ? "" : " (estimate)"}`}
                           </p>
                         </div>
                       </div>

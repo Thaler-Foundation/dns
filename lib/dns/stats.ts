@@ -1,7 +1,10 @@
 // Live figures for the vault pages, derived from the keeper API rows (NAV, hedge, pending stake); unknown values are null and render as n/a.
 import type { DnsVaultInfo } from "@/lib/dns/load";
+import { STDNS_DECIMALS, assetsForShares } from "@/lib/dns/math";
 
 const USDC_ATOMS = 1_000_000;
+const USDC_ATOMS_BIG = BigInt(USDC_ATOMS);
+const ONE_STDNS = BigInt(10) ** BigInt(STDNS_DECIMALS);
 
 export function vaultTvlUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info) return null;
@@ -38,4 +41,19 @@ export function lastMirrorRead(info: DnsVaultInfo | undefined): { atMs: number; 
 
 export function hedgedVaultCount(infos: (DnsVaultInfo | undefined)[]): number {
   return infos.filter((info) => info !== undefined && info.venuesLive > 0).length;
+}
+
+// USDC atoms one whole stDNS redeems for at the vault's own published NAV (shares.rs assets_for_shares); null while unpublished.
+export function stdnsRateUsdc(info: DnsVaultInfo | undefined): bigint | null {
+  if (!info?.published) return null;
+  return assetsForShares(ONE_STDNS, info.navUsdc, info.shareSupply);
+}
+
+export function formatRateUsdc(atoms: bigint | null): string {
+  if (atoms === null) return "n/a";
+  return `${atoms / USDC_ATOMS_BIG}.${(atoms % USDC_ATOMS_BIG).toString().padStart(6, "0")}`;
+}
+
+export function formatRate(atoms: bigint | null): string {
+  return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
 }

@@ -1,7 +1,8 @@
 // Stake requests as programs/dns records them: the vault account read at deposit time gives the open group id and pinned USDC account request_stake needs; the wallet's live StakeRequest accounts (user at byte 35) with their groups give each pending request's status and stDNS: its pro-rata share of the group's escrow shares (settle_stake's member_share), exact once the group is PRICED or SETTLED, an estimate at the published NAV while OPEN or EXECUTING (its legs running); zero means a refund, except in a PRICED group whose legs ran, which the program never refunds.
 import { getAddressEncoder, type Address } from "@solana/kit";
 import { ThalerDnsClient } from "@/lib/dns/client";
-import { sharesForAssets } from "@/lib/dns/math";
+import { memberShare, sharesForAssets } from "@/lib/dns/math";
+import { groupValueFromFills, quoteStakeShares, type StakeGroupFills } from "@/lib/dns/quote";
 import type { DnsVaultInfo } from "@/lib/dns/load";
 
 export const STAKE_REQUEST_DISCRIMINATOR = 5;
@@ -38,9 +39,27 @@ export type DnsPendingRequest = {
   status: DnsPendingStatus;
   tdnsAtoms: bigint;
   usdcAtoms: bigint;
-  shares: bigint;
+  shares: bigint | null;
   sharesExact: boolean;
 };
+
+// What settle_group and settle_stake would pay a member if the keeper priced the group now; null when the mode or the marks are unknown.
+export function estimatePendingShares(
+  g: StakeGroupFills & { status: number },
+  usdc: bigint,
+  v: DnsVaultInfo,
+  legsRequired: number | null,
+): bigint | null {
+  if (legsRequired === null || g.total_usdc === BigInt(0)) return null;
+  let groupShares: bigint | null;
+  if (g.status === GROUP_EXECUTING) {
+    const value = groupValueFromFills(g, v);
+    groupShares = value === null ? null : sharesForAssets(value, v.navUsdc, v.shareSupply);
+  } else {
+    groupShares = quoteStakeShares(g.total_usdc, v, legsRequired);
+  }
+  return groupShares === null ? null : memberShare(usdc, groupShares, g.total_usdc);
+}
 
 export function userFilterBytes(owner: Address): Uint8Array {
   return new Uint8Array(getAddressEncoder().encode(owner));
@@ -51,6 +70,7 @@ export async function loadPendingRequests(
   vaults: Record<string, DnsVaultInfo>,
   findRequests: (owner: Address) => Promise<{ address: Address; data: Uint8Array }[]>,
   getMultiple: (addresses: Address[]) => Promise<(Uint8Array | null)[]>,
+  legsRequired: number | null,
 ): Promise<DnsPendingRequest[]> {
   const requests = (await findRequests(owner))
     .map((r) => ({ address: r.address, state: client.decodeStakeRequest(r.data) }))
@@ -74,21 +94,21 @@ export async function loadPendingRequests(
     const entry = byVault.get(g.vault);
     if (!entry) continue;
     let status: DnsPendingStatus;
-    let shares: bigint;
+    let shares: bigint | null;
     let sharesExact: boolean;
     if (g.status === GROUP_PRICED || g.status === GROUP_SETTLED) {
       const groupShares =
         g.status === GROUP_SETTLED ? g.shares_total : sharesForAssets(g.group_value, g.snapshot_nav, g.snapshot_supply);
-      shares = g.total_usdc > BigInt(0) ? (r.state.usdc * groupShares) / g.total_usdc : BigInt(0);
+      shares = g.total_usdc > BigInt(0) ? memberShare(r.state.usdc, groupShares, g.total_usdc) : BigInt(0);
       sharesExact = true;
       const legsRan = g.leg_a_done + g.leg_b_done > 0;
       status = shares > BigInt(0) || (g.status === GROUP_PRICED && legsRan) ? "settling" : "refunding";
     } else if (g.status === GROUP_EXECUTING) {
-      shares = sharesForAssets(r.state.usdc, entry.v.navUsdc, entry.v.shareSupply);
+      shares = estimatePendingShares(g, r.state.usdc, entry.v, legsRequired);
       sharesExact = false;
       status = "settling";
     } else if (g.status === GROUP_OPEN) {
-      shares = sharesForAssets(r.state.usdc, entry.v.navUsdc, entry.v.shareSupply);
+      shares = estimatePendingShares(g, r.state.usdc, entry.v, legsRequired);
       sharesExact = false;
       status = "waiting";
     } else if (g.status === GROUP_ABORTED) {
