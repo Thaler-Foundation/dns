@@ -16,7 +16,7 @@ import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, tdnsToUsdcAtoms } from "@/lib/dns/math";
 import { quoteStakeShares } from "@/lib/dns/quote";
-import { formatRate, stdnsRateUsdc } from "@/lib/dns/stats";
+import { cushionPercent, formatRate, stdnsRateUsdc } from "@/lib/dns/stats";
 import { readStakeTarget } from "@/lib/dns/stake";
 import { requestStakeIxs } from "@/lib/dns/tx";
 import {
@@ -395,8 +395,12 @@ export function VaultDepositModal({
               </div>
 
               <div className="flex items-center justify-between pt-1 border-t border-border/60 text-[11px]">
-                <span className="text-muted-foreground">Protocol Service Fee</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">11.00%</span>
+                <span className="text-muted-foreground">Protocol service fee</span>
+                <span className="font-mono text-foreground font-medium">11% of income</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">Cushion retained from income</span>
+                <span className="font-mono text-foreground">{cushionPercent(info?.pressureBps ?? null)}</span>
               </div>
             </div>
           </div>
