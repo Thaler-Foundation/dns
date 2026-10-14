@@ -6,7 +6,7 @@ import { VaultCard } from "@/components/vaults/vault-card";
 import { VaultListRow } from "@/components/vaults/vault-list-row";
 import { cn } from "@/lib/utils";
 import { useDns } from "@/hooks/use-dns";
-import { formatUsdc, hedgedVaultCount, totalTvlUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { formatUsdcExact, hedgedVaultCount, totalTvlUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -76,7 +76,7 @@ export default function VaultsPage() {
               <div>
                 <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
                 <span className="text-xl font-bold font-mono text-foreground">
-                  {formatUsdc(totalTvl)}
+                  {formatUsdcExact(totalTvl)}
                 </span>
               </div>
               <div className="border-l border-border pl-5">

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
-import { formatRate, formatUsdc, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { formatRate, formatUsdcExact, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
@@ -15,7 +15,7 @@ export function VaultCard({ vault }: VaultCardProps) {
   const router = useRouter();
   const hasTokenized = hasTokenizedStock(vault);
   const dns = useDns();
-  const tvl = formatUsdc(vaultTvlUsdc(dns.vaults[vault.id]));
+  const tvl = formatUsdcExact(vaultTvlUsdc(dns.vaults[vault.id]));
   const rate = formatRate(stdnsRateUsdc(dns.vaults[vault.id]));
 
   const handleDepositClick = (e: React.MouseEvent) => {

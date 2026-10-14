@@ -29,6 +29,14 @@ export function formatUsdc(atoms: bigint | null): string {
   return `$${amount.toFixed(2)}`;
 }
 
+export function formatUsdcExact(atoms: bigint | null): string {
+  if (atoms === null) return "n/a";
+  const negative = atoms < BigInt(0);
+  const cents = ((negative ? -atoms : atoms) + BigInt(5_000)) / BigInt(10_000);
+  const cent = (cents % BigInt(100)).toString().padStart(2, "0");
+  return `${negative ? "-" : ""}$${(cents / BigInt(100)).toLocaleString("en-US")}.${cent}`;
+}
+
 export function deployedUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info?.hedge) return null;
   return info.hedge.legs.a.deployedUsdc + info.hedge.legs.b.deployedUsdc;
