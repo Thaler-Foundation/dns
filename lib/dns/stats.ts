@@ -29,6 +29,14 @@ export function formatUsdc(atoms: bigint | null): string {
   return `$${amount.toFixed(2)}`;
 }
 
+export function formatUsdcExact(atoms: bigint | null): string {
+  if (atoms === null) return "n/a";
+  const negative = atoms < BigInt(0);
+  const cents = ((negative ? -atoms : atoms) + BigInt(5_000)) / BigInt(10_000);
+  const cent = (cents % BigInt(100)).toString().padStart(2, "0");
+  return `${negative ? "-" : ""}$${(cents / BigInt(100)).toLocaleString("en-US")}.${cent}`;
+}
+
 export function deployedUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info?.hedge) return null;
   return info.hedge.legs.a.deployedUsdc + info.hedge.legs.b.deployedUsdc;
@@ -56,4 +64,16 @@ export function formatRateUsdc(atoms: bigint | null): string {
 
 export function formatRate(atoms: bigint | null): string {
   return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
+}
+
+export function formatSignedUsdc(atoms: bigint): string {
+  const sign = atoms < BigInt(0) ? "-" : "+";
+  const abs = atoms < BigInt(0) ? -atoms : atoms;
+  return `${sign}$${(Number(abs) / USDC_ATOMS).toFixed(2)}`;
+}
+
+export function cushionPercent(pressureBps: number | null): string {
+  if (pressureBps === null) return "n/a";
+  const bps = 1000 + Math.floor((2300 * pressureBps) / 10000);
+  return `${(bps / 100).toFixed(2).replace(/\.?0+$/, "")}%`;
 }

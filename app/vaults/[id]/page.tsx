@@ -10,7 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatRate, formatUsdc, lastMirrorRead, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { deployedUsdc, formatRate, formatSignedUsdc, formatUsdc, formatUsdcExact, lastMirrorRead, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -239,7 +239,7 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="rounded-sm border border-border bg-card p-3.5">
           <span className="text-[11px] text-muted-foreground block font-mono">TVL</span>
           <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-            {formatUsdc(vaultTvlUsdc(info))}
+            {formatUsdcExact(vaultTvlUsdc(info))}
           </span>
         </div>
 
@@ -255,6 +255,25 @@ function VaultDetailContent({ id }: { id: string }) {
           <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
             {mirrorRead ? new Date(mirrorRead.atMs).toISOString().slice(11, 19) + " UTC" : "n/a"}
           </span>
+        </div>
+      </div>
+
+      <div className="rounded-sm border border-border bg-card p-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+        <div>
+          <span className="text-[11px] text-muted-foreground block">Income since inception</span>
+          {info?.fees ? formatSignedUsdc(info.fees.cumulativeIncome) : "n/a"}
+        </div>
+        <div>
+          <span className="text-[11px] text-muted-foreground block">Fees accrued</span>
+          {info?.fees ? formatUsdc(info.fees.accruedUsdc) : "n/a"}
+        </div>
+        <div>
+          <span className="text-[11px] text-muted-foreground block">Fees collected</span>
+          {info?.fees ? formatUsdc(info.fees.collectedUsdc) : "n/a"}
+        </div>
+        <div>
+          <span className="text-[11px] text-muted-foreground block">Cushion retained</span>
+          {info?.fees ? formatUsdc(info.fees.cushionRetained) : "n/a"}
         </div>
       </div>
 

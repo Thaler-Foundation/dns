@@ -37,6 +37,10 @@ export type DnsVaultInfo = {
   redeemEscrowShares: bigint;
   hedge: DnsHedge | null;
   params: DnsVaultParams;
+  fees: DnsFees | null;
+  risk: DnsLegRisk | null;
+  pressureBps: number | null;
+  layoutVersion: number | null;
 };
 
 export type DnsVaultParams = {
@@ -48,7 +52,21 @@ export type DnsVaultParams = {
   spotDecimalsB: number;
 };
 
-export type DnsMixerLimits = { minStakeTdns: bigint; vaultCapUsdc: bigint; redeemCooldownSlots: bigint; legsRequired: number };
+export type DnsMixerLimits = { minStakeTdns: bigint; vaultCapUsdc: bigint; redeemCooldownSlots: bigint; legsRequired: number; treasury: string | null };
+
+export type DnsFees = {
+  accruedUsdc: bigint;
+  collectedUsdc: bigint;
+  cumulativeIncome: bigint;
+  feeHwm: bigint;
+  unsweptIncome: bigint;
+  cushionRetained: bigint;
+  dividendAccrued: bigint;
+};
+
+export type DnsLegRisk = { maxLeverageA: number; maxLeverageB: number; maintenanceBpsA: number; maintenanceBpsB: number };
+
+const UNSET_TREASURY = "11111111111111111111111111111111";
 
 export type DnsSnapshot = {
   mints: DnsMints | null;
@@ -71,6 +89,10 @@ type VaultRow = {
   groupsInFlight: string;
   redeemEscrowShares: string;
   params: { tickSizeA: string; tickSizeB: string; baseLotDecimalsA: number; baseLotDecimalsB: number; spotDecimalsA: number; spotDecimalsB: number };
+  layoutVersion?: number;
+  fees?: Record<keyof DnsFees, string> | null;
+  risk?: DnsLegRisk | null;
+  pressureBps?: number | null;
   hedge: {
     mainnetSlot: number;
     capturedAtMs: number;
@@ -111,7 +133,7 @@ export async function loadDns(
       problems.push("the DNS mixer is not deployed on this cluster");
     } else {
       const m = client.decodeMixerPool(data);
-      limits = { minStakeTdns: m.min_stake_tdns, vaultCapUsdc: m.vault_cap_usdc, redeemCooldownSlots: m.redeem_cooldown_slots, legsRequired: m.legs_required };
+      limits = { minStakeTdns: m.min_stake_tdns, vaultCapUsdc: m.vault_cap_usdc, redeemCooldownSlots: m.redeem_cooldown_slots, legsRequired: m.legs_required, treasury: m.treasury === UNSET_TREASURY ? null : String(m.treasury) };
       if (config.usdcMint && m.usdc_mint !== config.usdcMint) {
         problems.push(`USDC mint ${config.usdcMint} is not the program's ${m.usdc_mint}`);
       } else if (config.tdnsMint && m.tdns_mint !== config.tdnsMint) {
@@ -167,6 +189,20 @@ export async function loadDns(
                 legs: { a: hedgeLeg(row.hedge.legs.a), b: hedgeLeg(row.hedge.legs.b) },
               }
             : null,
+          fees: row.fees
+            ? {
+                accruedUsdc: BigInt(row.fees.accruedUsdc),
+                collectedUsdc: BigInt(row.fees.collectedUsdc),
+                cumulativeIncome: BigInt(row.fees.cumulativeIncome),
+                feeHwm: BigInt(row.fees.feeHwm),
+                unsweptIncome: BigInt(row.fees.unsweptIncome),
+                cushionRetained: BigInt(row.fees.cushionRetained),
+                dividendAccrued: BigInt(row.fees.dividendAccrued),
+              }
+            : null,
+          risk: row.risk ?? null,
+          pressureBps: typeof row.pressureBps === "number" ? row.pressureBps : null,
+          layoutVersion: typeof row.layoutVersion === "number" ? row.layoutVersion : null,
         };
       }
     } catch (err) {
