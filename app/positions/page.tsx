@@ -9,6 +9,7 @@ import { StDnsTokenIcon } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
+import { isSettling } from "@/lib/dns/stats";
 import type { DnsPendingStatus } from "@/lib/dns/stake";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 
@@ -32,7 +33,7 @@ export default function PositionsPage() {
   const rows = dns.positions
     .map((p) => ({ p, v: byId.get(p.vaultId) }))
     .filter((r): r is { p: (typeof dns.positions)[number]; v: NonNullable<typeof r.v> } => Boolean(r.v));
-  const total = rows.reduce((acc, r) => acc + r.p.usdcValue, BigInt(0));
+  const total = rows.some((r) => isSettling(dns.vaults[r.p.vaultId])) ? null : rows.reduce((acc, r) => acc + r.p.usdcValue, BigInt(0));
   const pending = dns.pending
     .map((q) => ({ q, v: byId.get(q.vaultId) }))
     .filter((r): r is { q: (typeof dns.pending)[number]; v: NonNullable<typeof r.v> } => Boolean(r.v));
@@ -81,7 +82,7 @@ export default function PositionsPage() {
                 <div className="rounded-sm border border-border bg-card p-3.5">
                   <span className="text-[11px] text-muted-foreground block font-mono">Total Value</span>
                   <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                    {formatAtoms(total, USDC_DECIMALS, 2)} USDC
+                    {total === null ? "n/a" : `${formatAtoms(total, USDC_DECIMALS, 2)} USDC`}
                   </span>
                 </div>
                 <div className="rounded-sm border border-border bg-card p-3.5">
@@ -104,7 +105,7 @@ export default function PositionsPage() {
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <p className="text-sm font-mono font-semibold text-foreground">
-                        {formatAtoms(p.usdcValue, USDC_DECIMALS, 2)} USDC
+                        {isSettling(dns.vaults[p.vaultId]) ? "n/a" : `${formatAtoms(p.usdcValue, USDC_DECIMALS, 2)} USDC`}
                       </p>
                       <Link
                         href={`/vaults/${v.id}`}
@@ -163,7 +164,7 @@ export default function PositionsPage() {
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-foreground truncate">{v.displayName}</p>
                             <p className="text-xs font-mono text-muted-foreground">
-                              {formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS (~{formatAtoms(assetsForShares(q.shares, info.navUsdc, info.shareSupply), USDC_DECIMALS, 2)} USDC at the published NAV)
+                              {formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS ({isSettling(info) ? "n/a" : `~${formatAtoms(assetsForShares(q.shares, info.navUsdc, info.shareSupply), USDC_DECIMALS, 2)} USDC`} at the published NAV)
                             </p>
                           </div>
                         </div>

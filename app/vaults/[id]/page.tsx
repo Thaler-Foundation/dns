@@ -10,7 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatUsdc, formatUsdcAtoms, formatUsdcExact, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
+import { deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatUsdc, formatUsdcAtoms, formatUsdcExact, isSettling, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -79,7 +79,7 @@ function VaultDetailContent({ id }: { id: string }) {
   const apy = formatApy(vaultApy(info));
   const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
   const position = wallet.connected && held ? held.atoms : BigInt(0);
-  const positionUsdc = info ? assetsForShares(position, info.navUsdc, info.shareSupply) : BigInt(0);
+  const positionUsdc = !info ? BigInt(0) : isSettling(info) ? null : assetsForShares(position, info.navUsdc, info.shareSupply);
   const refreshPosition = () => {
     void dns.refresh();
   };
@@ -149,7 +149,7 @@ function VaultDetailContent({ id }: { id: string }) {
                 {formatAtoms(position, STDNS_DECIMALS, 6)} stDNS
               </p>
               <p className="text-xs font-mono text-muted-foreground">
-                {formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC
+                {positionUsdc === null ? "n/a" : `${formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC`}
               </p>
             </div>
           </div>

@@ -9,13 +9,18 @@ const USDC_ATOMS_PER_TDNS = BigInt(100_000_000);
 const DAY_MS = 86_400_000;
 const MIN_APY_DAYS = 7;
 
+export function isSettling(info: DnsVaultInfo | undefined): boolean {
+  return info !== undefined && info.groupsInFlight > BigInt(0);
+}
+
 export function vaultTvlUsdc(info: DnsVaultInfo | undefined): bigint | null {
-  if (!info) return null;
+  if (!info || isSettling(info)) return null;
   if (info.published) return info.navUsdc;
   return info.shareSupply === BigInt(0) ? BigInt(0) : null;
 }
 
 export function totalTvlUsdc(infos: (DnsVaultInfo | undefined)[]): bigint | null {
+  if (infos.some(isSettling)) return null;
   let total: bigint | null = null;
   for (const info of infos) {
     const tvl = vaultTvlUsdc(info);
@@ -56,7 +61,7 @@ export function hedgedVaultCount(infos: (DnsVaultInfo | undefined)[]): number {
 
 // USDC atoms one whole stDNS redeems for at the vault's own published NAV (shares.rs assets_for_shares); null while unpublished or while a stake group is in flight.
 export function stdnsRateUsdc(info: DnsVaultInfo | undefined): bigint | null {
-  if (!info?.published || info.groupsInFlight > BigInt(0)) return null;
+  if (!info?.published || isSettling(info)) return null;
   return assetsForShares(ONE_STDNS, info.navUsdc, info.shareSupply);
 }
 
@@ -98,7 +103,7 @@ export function yieldAccruedUsdc(info: DnsVaultInfo | undefined): bigint | null 
 }
 
 export function unclaimedYieldUsdc(info: DnsVaultInfo | undefined): bigint | null {
-  if (!info?.published || info.groupsInFlight > BigInt(0) || !info.history || info.shareSupply !== info.history.sharesMinted) return null;
+  if (!info?.published || isSettling(info) || !info.history || info.shareSupply !== info.history.sharesMinted) return null;
   return info.navUsdc - info.history.depositedUsdc;
 }
 

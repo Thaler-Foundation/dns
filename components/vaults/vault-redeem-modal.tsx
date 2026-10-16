@@ -15,6 +15,7 @@ import { useDns, type DnsVaultInfo } from "@/hooks/use-dns";
 import type { DnsMints } from "@/lib/dns/tx";
 import { redeemIxs, requestRedeemIxs } from "@/lib/dns/tx";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms, parseAtoms } from "@/lib/dns/math";
+import { isSettling } from "@/lib/dns/stats";
 import type { VaultStrategy } from "@/lib/vaults-data";
 import { readRedeemable, type Redeemable } from "@/lib/dns/redeemable";
 
@@ -174,7 +175,7 @@ export function VaultRedeemModal({
                 <span className="font-semibold text-xs tracking-tight">USDC</span>
               </div>
               <p className="w-full text-right font-mono text-xl font-bold text-foreground">
-                {formatAtoms(payout, USDC_DECIMALS)}
+                {isSettling(info) ? "n/a" : formatAtoms(payout, USDC_DECIMALS)}
               </p>
             </div>
           </div>

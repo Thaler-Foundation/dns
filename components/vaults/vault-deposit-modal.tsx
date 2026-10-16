@@ -16,7 +16,7 @@ import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, tdnsToUsdcAtoms } from "@/lib/dns/math";
 import { quoteStakeShares } from "@/lib/dns/quote";
-import { cushionPercent, formatApy, formatRate, stdnsRateUsdc, vaultApy } from "@/lib/dns/stats";
+import { cushionPercent, formatApy, formatRate, isSettling, stdnsRateUsdc, vaultApy } from "@/lib/dns/stats";
 import { readStakeTarget } from "@/lib/dns/stake";
 import { requestStakeIxs } from "@/lib/dns/tx";
 import {
@@ -64,7 +64,7 @@ export function VaultDepositModal({
   const hasTokenized = hasTokenizedStock(vault);
   const minStake = dns.mixer?.minStakeTdns ?? BigInt(0);
   const belowMin = tdnsAtoms > BigInt(0) && tdnsAtoms < minStake;
-  const room = info && dns.mixer ? dns.mixer.vaultCapUsdc - info.navUsdc - info.pendingStakeUsdc : null;
+  const room = info && dns.mixer && !isSettling(info) ? dns.mixer.vaultCapUsdc - info.navUsdc - info.pendingStakeUsdc : null;
   const roomLeft = room === null ? null : room > BigInt(0) ? room : BigInt(0);
   const overCap = roomLeft !== null && tdnsToUsdcAtoms(tdnsAtoms) > roomLeft;
 
@@ -317,9 +317,9 @@ export function VaultDepositModal({
               ? "Requesting..."
               : "Deposit tDNS"}
           </Button>
-          {dns.mixer && roomLeft !== null && (
-            <p className="text-[11px] font-mono text-muted-foreground text-center" data-room-left={roomLeft.toString()} data-min-stake={minStake.toString()}>
-              Minimum {formatAtoms(minStake, TDNS_DECIMALS)} tDNS. Room left: {formatAtoms(roomLeft, USDC_DECIMALS, 2)} of {formatAtoms(dns.mixer.vaultCapUsdc, USDC_DECIMALS, 0)} USDC.
+          {dns.mixer && (roomLeft !== null || isSettling(info)) && (
+            <p className="text-[11px] font-mono text-muted-foreground text-center" data-room-left={roomLeft === null ? "n/a" : roomLeft.toString()} data-min-stake={minStake.toString()}>
+              Minimum {formatAtoms(minStake, TDNS_DECIMALS)} tDNS. Room left: {roomLeft === null ? "n/a" : formatAtoms(roomLeft, USDC_DECIMALS, 2)} of {formatAtoms(dns.mixer.vaultCapUsdc, USDC_DECIMALS, 0)} USDC.
             </p>
           )}
           <p className="text-[11px] text-muted-foreground text-center">
