@@ -10,7 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatRate, formatSignedUsdc, formatUsdc, formatUsdcExact, lastMirrorRead, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { deployedUsdc, formatApy, formatRate, formatSignedUsdc, formatUsdc, formatUsdcExact, lastMirrorRead, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -76,6 +76,7 @@ function VaultDetailContent({ id }: { id: string }) {
   const dns = useDns();
   const info = vault ? dns.vaults[vault.id] : undefined;
   const mirrorRead = lastMirrorRead(info);
+  const apy = formatApy(vaultApy(info));
   const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
   const position = wallet.connected && held ? held.atoms : BigInt(0);
   const positionUsdc = info ? assetsForShares(position, info.navUsdc, info.shareSupply) : BigInt(0);
@@ -123,9 +124,8 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="flex items-center gap-4 self-start sm:self-auto shrink-0">
           <div className="text-right sm:text-left">
             <span className="text-[11px] text-muted-foreground block font-mono">Net APY</span>
-            {/* TODO: add net APY calculation */}
             <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-              n/a
+              {apy}
             </span>
           </div> 
         </div>
@@ -136,9 +136,8 @@ function VaultDetailContent({ id }: { id: string }) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Your Position
           </span>
-          {/* TODO: add Position APY calculation */}
           <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-            APY n/a
+            APY {apy}
           </span>
         </div>
 

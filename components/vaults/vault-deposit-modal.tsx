@@ -16,7 +16,7 @@ import { useTokenBalances } from "@/hooks/use-token-balances";
 import { useTokenPrices } from "@/hooks/use-token-prices";
 import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, formatAtoms, parseAtoms, tdnsToUsdcAtoms } from "@/lib/dns/math";
 import { quoteStakeShares } from "@/lib/dns/quote";
-import { cushionPercent, formatRate, stdnsRateUsdc } from "@/lib/dns/stats";
+import { cushionPercent, formatApy, formatRate, stdnsRateUsdc, vaultApy } from "@/lib/dns/stats";
 import { readStakeTarget } from "@/lib/dns/stake";
 import { requestStakeIxs } from "@/lib/dns/tx";
 import {
@@ -175,9 +175,8 @@ export function VaultDepositModal({
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Strategy APY</p>
-              {/* TODO: add strategy APY calculation */}
               <p className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
-                n/a
+                {formatApy(vaultApy(info))}
               </p>
               <p className="text-[11px] text-muted-foreground">Auto-compounding</p>
             </div>

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
-import { formatRate, formatUsdcExact, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { formatApy, formatRate, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
@@ -17,6 +17,7 @@ export function VaultCard({ vault }: VaultCardProps) {
   const dns = useDns();
   const tvl = formatUsdcExact(vaultTvlUsdc(dns.vaults[vault.id]));
   const rate = formatRate(stdnsRateUsdc(dns.vaults[vault.id]));
+  const apy = formatApy(vaultApy(dns.vaults[vault.id]));
 
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -60,9 +61,8 @@ export function VaultCard({ vault }: VaultCardProps) {
       <div className="flex items-center justify-between gap-3 pt-3.5">
         <div>
           <span className="text-[11px] text-muted-foreground block">Net APY</span>
-          {/* TODO: add net APY calculation */}
           <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400">
-            n/a
+            {apy}
           </span>
         </div>
 

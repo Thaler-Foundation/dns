@@ -41,6 +41,7 @@ export type DnsVaultInfo = {
   risk: DnsLegRisk | null;
   pressureBps: number | null;
   layoutVersion: number | null;
+  rate7d: { navUsdc: bigint; shareSupply: bigint; capturedAtMs: number } | null;
 };
 
 export type DnsVaultParams = {
@@ -93,6 +94,7 @@ type VaultRow = {
   fees?: Record<keyof DnsFees, string> | null;
   risk?: DnsLegRisk | null;
   pressureBps?: number | null;
+  rate7d?: { navUsdc: string; shareSupply: string; capturedAtMs: number } | null;
   hedge: {
     mainnetSlot: number;
     capturedAtMs: number;
@@ -203,6 +205,9 @@ export async function loadDns(
           risk: row.risk ?? null,
           pressureBps: typeof row.pressureBps === "number" ? row.pressureBps : null,
           layoutVersion: typeof row.layoutVersion === "number" ? row.layoutVersion : null,
+          rate7d: row.rate7d
+            ? { navUsdc: BigInt(row.rate7d.navUsdc), shareSupply: BigInt(row.rate7d.shareSupply), capturedAtMs: row.rate7d.capturedAtMs }
+            : null,
         };
       }
     } catch (err) {

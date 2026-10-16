@@ -66,6 +66,20 @@ export function formatRate(atoms: bigint | null): string {
   return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
 }
 
+export function vaultApy(info: DnsVaultInfo | undefined): number | null {
+  const now = stdnsRateUsdc(info);
+  if (now === null || !info?.rate7d) return null;
+  const base = assetsForShares(ONE_STDNS, info.rate7d.navUsdc, info.rate7d.shareSupply);
+  if (base === BigInt(0)) return null;
+  return (Number(now) / Number(base)) ** (365 / 7) - 1;
+}
+
+export function formatApy(apy: number | null): string {
+  if (apy === null || !Number.isFinite(apy)) return "n/a";
+  const pct = (apy * 100).toFixed(2);
+  return `${pct === "-0.00" ? "0.00" : pct}%`;
+}
+
 export function formatSignedUsdc(atoms: bigint): string {
   const sign = atoms < BigInt(0) ? "-" : "+";
   const abs = atoms < BigInt(0) ? -atoms : atoms;
