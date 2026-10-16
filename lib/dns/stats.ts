@@ -7,6 +7,7 @@ const USDC_ATOMS_BIG = BigInt(USDC_ATOMS);
 const ONE_STDNS = BigInt(10) ** BigInt(STDNS_DECIMALS);
 const USDC_ATOMS_PER_TDNS = BigInt(100_000_000);
 const DAY_MS = 86_400_000;
+const MIN_APY_DAYS = 7;
 
 export function vaultTvlUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info) return null;
@@ -53,9 +54,9 @@ export function hedgedVaultCount(infos: (DnsVaultInfo | undefined)[]): number {
   return infos.filter((info) => info !== undefined && info.venuesLive > 0).length;
 }
 
-// USDC atoms one whole stDNS redeems for at the vault's own published NAV (shares.rs assets_for_shares); null while unpublished.
+// USDC atoms one whole stDNS redeems for at the vault's own published NAV (shares.rs assets_for_shares); null while unpublished or while a stake group is in flight.
 export function stdnsRateUsdc(info: DnsVaultInfo | undefined): bigint | null {
-  if (!info?.published) return null;
+  if (!info?.published || info.groupsInFlight > BigInt(0)) return null;
   return assetsForShares(ONE_STDNS, info.navUsdc, info.shareSupply);
 }
 
@@ -73,7 +74,7 @@ export function vaultApy(info: DnsVaultInfo | undefined): number | null {
   const start = info?.history;
   if (now === null || !start || start.inceptionAtMs === null || typeof info?.capturedAtMs !== "number") return null;
   const days = (info.capturedAtMs - start.inceptionAtMs) / DAY_MS;
-  if (days <= 0) return null;
+  if (days < MIN_APY_DAYS) return null;
   const base = assetsForShares(ONE_STDNS, start.inceptionNavUsdc, start.inceptionShareSupply);
   if (base === BigInt(0)) return null;
   return (Number(now) / Number(base)) ** (365 / days) - 1;
@@ -97,7 +98,7 @@ export function yieldAccruedUsdc(info: DnsVaultInfo | undefined): bigint | null 
 }
 
 export function unclaimedYieldUsdc(info: DnsVaultInfo | undefined): bigint | null {
-  if (!info?.published || !info.history || info.shareSupply !== info.history.sharesMinted) return null;
+  if (!info?.published || info.groupsInFlight > BigInt(0) || !info.history || info.shareSupply !== info.history.sharesMinted) return null;
   return info.navUsdc - info.history.depositedUsdc;
 }
 
