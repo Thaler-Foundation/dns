@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
-import { formatApy, formatRateUsdc, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
+import { formatApy, formatRateTdns, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 import { ChevronRight } from "lucide-react";
 
@@ -17,7 +17,7 @@ export function VaultListRow({ vault }: VaultListRowProps) {
   const hasTokenized = hasTokenizedStock(vault);
   const dns = useDns();
   const tvl = formatUsdcExact(vaultTvlUsdc(dns.vaults[vault.id]));
-  const rate = formatRateUsdc(stdnsRateUsdc(dns.vaults[vault.id]));
+  const rate = formatRateTdns(stdnsRateUsdc(dns.vaults[vault.id]));
   const apy = formatApy(vaultApy(dns.vaults[vault.id]));
 
   const handleDepositClick = (e: React.MouseEvent) => {

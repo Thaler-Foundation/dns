@@ -5,6 +5,8 @@ import { STDNS_DECIMALS, assetsForShares } from "@/lib/dns/math";
 const USDC_ATOMS = 1_000_000;
 const USDC_ATOMS_BIG = BigInt(USDC_ATOMS);
 const ONE_STDNS = BigInt(10) ** BigInt(STDNS_DECIMALS);
+const USDC_ATOMS_PER_TDNS = BigInt(100_000_000);
+const DAY_MS = 86_400_000;
 
 export function vaultTvlUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info) return null;
@@ -57,27 +59,58 @@ export function stdnsRateUsdc(info: DnsVaultInfo | undefined): bigint | null {
   return assetsForShares(ONE_STDNS, info.navUsdc, info.shareSupply);
 }
 
-export function formatRateUsdc(atoms: bigint | null): string {
+export function formatRateTdns(atoms: bigint | null): string {
   if (atoms === null) return "n/a";
-  return `${atoms / USDC_ATOMS_BIG}.${(atoms % USDC_ATOMS_BIG).toString().padStart(6, "0")}`;
+  return `${atoms / USDC_ATOMS_PER_TDNS}.${(atoms % USDC_ATOMS_PER_TDNS).toString().padStart(8, "0")}`;
 }
 
 export function formatRate(atoms: bigint | null): string {
-  return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
+  return atoms === null ? "n/a" : `1 stDNS = ${formatRateTdns(atoms)} tDNS`;
 }
 
 export function vaultApy(info: DnsVaultInfo | undefined): number | null {
   const now = stdnsRateUsdc(info);
-  if (now === null || !info?.rate7d) return null;
-  const base = assetsForShares(ONE_STDNS, info.rate7d.navUsdc, info.rate7d.shareSupply);
+  const start = info?.history;
+  if (now === null || !start || start.inceptionAtMs === null || typeof info?.capturedAtMs !== "number") return null;
+  const days = (info.capturedAtMs - start.inceptionAtMs) / DAY_MS;
+  if (days <= 0) return null;
+  const base = assetsForShares(ONE_STDNS, start.inceptionNavUsdc, start.inceptionShareSupply);
   if (base === BigInt(0)) return null;
-  return (Number(now) / Number(base)) ** (365 / 7) - 1;
+  return (Number(now) / Number(base)) ** (365 / days) - 1;
 }
 
 export function formatApy(apy: number | null): string {
   if (apy === null || !Number.isFinite(apy)) return "n/a";
   const pct = (apy * 100).toFixed(2);
   return `${pct === "-0.00" ? "0.00" : pct}%`;
+}
+
+export function totalIncomeUsdc(info: DnsVaultInfo | undefined): bigint | null {
+  if (!info?.hedge || !info.fees) return null;
+  return info.hedge.legs.a.fundingReceived + info.hedge.legs.b.fundingReceived + info.fees.dividendAccrued;
+}
+
+export function yieldAccruedUsdc(info: DnsVaultInfo | undefined): bigint | null {
+  if (!info?.fees) return null;
+  const f = info.fees;
+  return f.feeHwm - f.accruedUsdc - f.collectedUsdc - f.cushionRetained;
+}
+
+export function unclaimedYieldUsdc(info: DnsVaultInfo | undefined): bigint | null {
+  if (!info?.published || !info.history || info.shareSupply !== info.history.sharesMinted) return null;
+  return info.navUsdc - info.history.depositedUsdc;
+}
+
+export function formatUsdcAtoms(atoms: bigint | null): string {
+  if (atoms === null) return "n/a";
+  const negative = atoms < BigInt(0);
+  const abs = negative ? -atoms : atoms;
+  return `${negative ? "-" : ""}$${(abs / USDC_ATOMS_BIG).toLocaleString("en-US")}.${(abs % USDC_ATOMS_BIG).toString().padStart(6, "0")}`;
+}
+
+export function formatSignedUsdcAtoms(atoms: bigint | null): string {
+  if (atoms === null) return "n/a";
+  return atoms < BigInt(0) ? formatUsdcAtoms(atoms) : `+${formatUsdcAtoms(atoms)}`;
 }
 
 export function formatSignedUsdc(atoms: bigint): string {
