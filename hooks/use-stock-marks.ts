@@ -1,4 +1,4 @@
-// Polls the DNS service's xStock marks every 8 s while enabled and the calling page is mounted (lib/dns/marks).
+// Polls the DNS service's xStock marks every 8 s while enabled and the calling page is mounted, timing each price flash (lib/dns/marks).
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +6,7 @@ import { DNS_CONFIG } from "@/lib/dns/config";
 import { startStockMarksPolling, type StockMarksView } from "@/lib/dns/marks";
 
 export function useStockMarks(enabled: boolean): StockMarksView {
-  const [view, setView] = useState<StockMarksView>({ snapshot: null, nowMs: 0, moves: {} });
+  const [view, setView] = useState<StockMarksView>({ snapshot: null, nowMs: 0, flashes: {} });
   useEffect(() => {
     const apiUrl = DNS_CONFIG.apiUrl;
     if (!enabled || !apiUrl) return;
@@ -22,6 +22,10 @@ export function useStockMarks(enabled: boolean): StockMarksView {
       every: (fn, ms) => {
         const id = setInterval(fn, ms);
         return () => clearInterval(id);
+      },
+      later: (fn, ms) => {
+        const id = setTimeout(fn, ms);
+        return () => clearTimeout(id);
       },
     });
   }, [enabled]);
