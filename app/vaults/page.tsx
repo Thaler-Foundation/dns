@@ -6,6 +6,7 @@ import { VaultCard } from "@/components/vaults/vault-card";
 import { VaultListRow } from "@/components/vaults/vault-list-row";
 import { cn } from "@/lib/utils";
 import { useDns } from "@/hooks/use-dns";
+import { useStockMarks } from "@/hooks/use-stock-marks";
 import { formatUsdcExact, hedgedVaultCount, totalTvlUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 import { LayoutGrid, List, Search } from "lucide-react";
@@ -19,6 +20,7 @@ export default function VaultsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("All");
   const dns = useDns();
+  const marks = useStockMarks(viewMode === "grid");
 
   const infos = useMemo(() => VAULT_STRATEGIES.map((v) => dns.vaults[v.id]), [dns.vaults]);
   const totalTvl = useMemo(() => totalTvlUsdc(infos), [infos]);
@@ -162,7 +164,7 @@ export default function VaultsPage() {
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {filteredVaults.map((vault) => (
-                <VaultCard key={vault.id} vault={vault} />
+                <VaultCard key={vault.id} vault={vault} marks={marks} />
               ))}
             </div>
           ) : (

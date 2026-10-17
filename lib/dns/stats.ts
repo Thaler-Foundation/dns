@@ -44,6 +44,17 @@ export function formatUsdcExact(atoms: bigint | null): string {
   return `${negative ? "-" : ""}$${(cents / BigInt(100)).toLocaleString("en-US")}.${cent}`;
 }
 
+export function formatUsdcCents(atoms: bigint): string {
+  const negative = atoms < BigInt(0);
+  const cents = (negative ? -atoms : atoms) / BigInt(10_000);
+  const cent = (cents % BigInt(100)).toString().padStart(2, "0");
+  return `${negative ? "-" : ""}$${(cents / BigInt(100)).toLocaleString("en-US")}.${cent}`;
+}
+
+export function formatSignedUsdcCents(atoms: bigint): string {
+  return atoms < BigInt(0) ? formatUsdcCents(atoms) : `+${formatUsdcCents(atoms)}`;
+}
+
 export function deployedUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info?.hedge) return null;
   return info.hedge.legs.a.deployedUsdc + info.hedge.legs.b.deployedUsdc;

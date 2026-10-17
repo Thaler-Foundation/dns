@@ -10,7 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatUsdc, formatUsdcAtoms, formatUsdcExact, isSettling, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
+import { deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatSignedUsdcCents, formatUsdc, formatUsdcAtoms, formatUsdcCents, formatUsdcExact, isSettling, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -40,9 +40,15 @@ function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures 
         <span className="font-semibold text-foreground">{figures.shortShares} sh ({formatAtoms(figures.shortUsdc, USDC_DECIMALS, 2)} USDC)</span>
       </div>
       <div className="flex items-center justify-between text-[11px]">
-        <span className="text-muted-foreground">Mark {figures.markUsdc} USDC, margin {formatAtoms(leg.collateral, USDC_DECIMALS, 2)}</span>
+        <span className="text-muted-foreground">Mark {figures.markUsdc}</span>
         <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
-          {figures.unrealised < BigInt(0) ? "" : "+"}{formatAtoms(figures.unrealised, USDC_DECIMALS, 2)} unrealised, +{formatAtoms(leg.fundingReceived, USDC_DECIMALS, 2)} funding
+          {formatSignedUsdcCents(figures.unrealised)} unrealized
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-muted-foreground">Margin {formatUsdcCents(leg.collateral)}</span>
+        <span className={leg.fundingReceived < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+          {formatSignedUsdcCents(leg.fundingReceived)} funding
         </span>
       </div>
     </>

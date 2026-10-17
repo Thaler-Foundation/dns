@@ -9,7 +9,7 @@ import { StDnsTokenIcon } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, TDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
-import { isSettling } from "@/lib/dns/stats";
+import { formatUsdcCents, isSettling } from "@/lib/dns/stats";
 import type { DnsPendingStatus } from "@/lib/dns/stake";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 
@@ -82,7 +82,7 @@ export default function PositionsPage() {
                 <div className="rounded-sm border border-border bg-card p-3.5">
                   <span className="text-[11px] text-muted-foreground block font-mono">Total Value</span>
                   <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                    {total === null ? "n/a" : `${formatAtoms(total, USDC_DECIMALS, 2)} USDC`}
+                    {total === null ? "n/a" : <>{formatUsdcCents(total)} <span className="font-normal">(USDC)</span></>}
                   </span>
                 </div>
                 <div className="rounded-sm border border-border bg-card p-3.5">
@@ -105,7 +105,7 @@ export default function PositionsPage() {
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <p className="text-sm font-mono font-semibold text-foreground">
-                        {isSettling(dns.vaults[p.vaultId]) ? "n/a" : `${formatAtoms(p.usdcValue, USDC_DECIMALS, 2)} USDC`}
+                        {isSettling(dns.vaults[p.vaultId]) ? "n/a" : <>{formatUsdcCents(p.usdcValue)} <span className="font-normal">(USDC)</span></>}
                       </p>
                       <Link
                         href={`/vaults/${v.id}`}
