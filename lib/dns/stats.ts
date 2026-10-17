@@ -5,7 +5,6 @@ import { STDNS_DECIMALS, assetsForShares } from "@/lib/dns/math";
 const USDC_ATOMS = 1_000_000;
 const USDC_ATOMS_BIG = BigInt(USDC_ATOMS);
 const ONE_STDNS = BigInt(10) ** BigInt(STDNS_DECIMALS);
-const USDC_ATOMS_PER_TDNS = BigInt(100_000_000);
 const DAY_MS = 86_400_000;
 const MIN_APY_DAYS = 7;
 
@@ -65,13 +64,13 @@ export function stdnsRateUsdc(info: DnsVaultInfo | undefined): bigint | null {
   return assetsForShares(ONE_STDNS, info.navUsdc, info.shareSupply);
 }
 
-export function formatRateTdns(atoms: bigint | null): string {
+export function formatRateUsdc(atoms: bigint | null): string {
   if (atoms === null) return "n/a";
-  return `${atoms / USDC_ATOMS_PER_TDNS}.${(atoms % USDC_ATOMS_PER_TDNS).toString().padStart(8, "0")}`;
+  return `$${atoms / USDC_ATOMS_BIG}.${(atoms % USDC_ATOMS_BIG).toString().padStart(6, "0")}`;
 }
 
 export function formatRate(atoms: bigint | null): string {
-  return atoms === null ? "n/a" : `1 stDNS = ${formatRateTdns(atoms)} tDNS`;
+  return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
 }
 
 export function vaultApy(info: DnsVaultInfo | undefined): number | null {
