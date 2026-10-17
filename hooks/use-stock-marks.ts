@@ -6,7 +6,7 @@ import { DNS_CONFIG } from "@/lib/dns/config";
 import { startStockMarksPolling, type StockMarksView } from "@/lib/dns/marks";
 
 export function useStockMarks(enabled: boolean): StockMarksView {
-  const [view, setView] = useState<StockMarksView>({ snapshot: null, nowMs: 0 });
+  const [view, setView] = useState<StockMarksView>({ snapshot: null, nowMs: 0, moves: {} });
   useEffect(() => {
     const apiUrl = DNS_CONFIG.apiUrl;
     if (!enabled || !apiUrl) return;
