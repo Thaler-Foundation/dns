@@ -2,20 +2,28 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
+import { StockIcon, VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
 import { formatApy, formatRate, formatUsdcCents, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
-import { stockMarkUsdc, type StockMarksView } from "@/lib/dns/marks";
-import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
+import { formatChange24h, stockMarkUsdc, stockPrevDayUsdc, type StockMarksView } from "@/lib/dns/marks";
+import { type StockTicker, type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
   vault: VaultStrategy;
   marks: StockMarksView;
 }
 
-function markLine(marks: StockMarksView, ticker: string): string {
+function MarkLine({ marks, ticker }: { marks: StockMarksView; ticker: StockTicker }) {
   const atoms = stockMarkUsdc(marks, ticker);
-  return `${ticker} ${atoms === null ? "n/a" : formatUsdcCents(atoms)}`;
+  const move = atoms === null ? undefined : marks.moves[ticker];
+  const tone = move === "up" ? "text-emerald-600 dark:text-emerald-400" : move === "down" ? "text-rose-600 dark:text-rose-400" : "text-foreground";
+  return (
+    <>
+      <StockIcon ticker={ticker} size={20} />
+      <span className={`text-right ${tone}`}>{atoms === null ? "n/a" : formatUsdcCents(atoms)}</span>
+      <span className={tone}>{atoms === null ? "(n/a)" : formatChange24h(atoms, stockPrevDayUsdc(marks, ticker))}</span>
+    </>
+  );
 }
 
 export function VaultCard({ vault, marks }: VaultCardProps) {
@@ -64,9 +72,9 @@ export function VaultCard({ vault, marks }: VaultCardProps) {
               </p>
             </div>
           </div>
-          <div data-stock-marks="true" className="shrink-0 text-right font-semibold text-base leading-[22px] tracking-tight text-foreground">
-            <p>{markLine(marks, vault.stock1)}</p>
-            <p>{markLine(marks, vault.stock2)}</p>
+          <div data-stock-marks="true" className="shrink-0 grid grid-cols-[auto_auto_auto] items-center gap-x-1.5 font-normal text-base leading-[22px] tracking-tight">
+            <MarkLine marks={marks} ticker={vault.stock1} />
+            <MarkLine marks={marks} ticker={vault.stock2} />
           </div>
         </div>
       </div>
