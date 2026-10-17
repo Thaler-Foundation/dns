@@ -56,7 +56,9 @@ export function VaultDepositModal({
   const tdnsAtoms = parseAtoms(amount, TDNS_DECIMALS) ?? BigInt(0);
   const legsRequired = dns.mixer?.legsRequired ?? null;
   const previewShares =
-    info && tdnsAtoms > BigInt(0)
+    info && isSettling(info)
+      ? null
+      : info && tdnsAtoms > BigInt(0)
       ? legsRequired === null
         ? null
         : quoteStakeShares(tdnsToUsdcAtoms(tdnsAtoms), info, legsRequired)

@@ -20,6 +20,7 @@ import Link from "next/link";
 import { StDnsTokenIcon } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
 import { STDNS_DECIMALS, USDC_DECIMALS, formatAtoms } from "@/lib/dns/math";
+import { isSettling } from "@/lib/dns/stats";
 import { VAULT_STRATEGIES } from "@/lib/vaults-data";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ export function WalletDrawer() {
   const address = wallet.address;
 
   const totalUsd = useMemo(() => {
+    if (stdnsRows.some(({ p }) => isSettling(dns.vaults[p.vaultId]))) return null;
     let sum = 0;
     for (const token of TOKEN_LIST) {
       const balance = balances[token.symbol] ?? 0;
@@ -53,7 +55,7 @@ export function WalletDrawer() {
       sum += (Number(p.usdcValue) / 10 ** USDC_DECIMALS) * usdcPrice;
     }
     return sum;
-  }, [balances, prices, stdnsRows]);
+  }, [balances, prices, stdnsRows, dns.vaults]);
 
   if (!address) return null;
 
@@ -119,10 +121,12 @@ export function WalletDrawer() {
               Total Balance
             </div>
             <div className="font-mono text-3xl font-semibold text-foreground mt-1 tabular-nums">
-              ${totalUsd.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {totalUsd === null
+                ? "n/a"
+                : `$${totalUsd.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`}
             </div>
           </div>
 
@@ -194,7 +198,7 @@ export function WalletDrawer() {
                 );
               })}
               {stdnsRows.map(({ p, v }) => {
-                const valueUsd = (Number(p.usdcValue) / 10 ** USDC_DECIMALS) * (prices.USDC?.usdPrice ?? 0);
+                const valueUsd = isSettling(dns.vaults[p.vaultId]) ? null : (Number(p.usdcValue) / 10 ** USDC_DECIMALS) * (prices.USDC?.usdPrice ?? 0);
                 return (
                   <div key={p.vaultId} data-stdns={v.id} className="flex min-w-0 items-center justify-between gap-3 py-3.5">
                     <div className="flex min-w-0 items-center gap-3">
@@ -213,10 +217,12 @@ export function WalletDrawer() {
                         {formatAtoms(p.atoms, STDNS_DECIMALS, 5)}
                       </div>
                       <div className="font-mono text-xs text-muted-foreground tabular-nums">
-                        ${valueUsd.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        {valueUsd === null
+                          ? "n/a"
+                          : `$${valueUsd.toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}`}
                       </div>
                     </div>
                   </div>
