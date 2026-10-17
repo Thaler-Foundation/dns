@@ -4,14 +4,21 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
-import { formatApy, formatRate, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
+import { formatApy, formatRate, formatUsdcCents, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
+import { stockMarkUsdc, type StockMarksView } from "@/lib/dns/marks";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 
 interface VaultCardProps {
   vault: VaultStrategy;
+  marks: StockMarksView;
 }
 
-export function VaultCard({ vault }: VaultCardProps) {
+function markLine(marks: StockMarksView, ticker: string): string {
+  const atoms = stockMarkUsdc(marks, ticker);
+  return `${ticker} ${atoms === null ? "n/a" : formatUsdcCents(atoms)}`;
+}
+
+export function VaultCard({ vault, marks }: VaultCardProps) {
   const router = useRouter();
   const hasTokenized = hasTokenizedStock(vault);
   const dns = useDns();
@@ -42,18 +49,24 @@ export function VaultCard({ vault }: VaultCardProps) {
           </div>
         </div>
 
-        <div className="py-3.5 border-b border-border/60">
-          <div>
-            <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
-            <p className="text-sm font-bold font-mono text-foreground mt-0.5">
-              {tvl}
-            </p>
+        <div className="flex items-center justify-between gap-3 py-3.5 border-b border-border/60">
+          <div className="min-w-0">
+            <div>
+              <span className="text-[11px] text-muted-foreground block">Total Value Locked</span>
+              <p className="text-sm font-bold font-mono text-foreground mt-0.5">
+                {tvl}
+              </p>
+            </div>
+            <div className="mt-2">
+              <span className="text-[11px] text-muted-foreground block">stDNS Rate</span>
+              <p className="text-xs font-mono text-foreground mt-0.5">
+                {rate}
+              </p>
+            </div>
           </div>
-          <div className="mt-2">
-            <span className="text-[11px] text-muted-foreground block">stDNS Rate</span>
-            <p className="text-xs font-mono text-foreground mt-0.5">
-              {rate}
-            </p>
+          <div data-stock-marks="true" className="shrink-0 text-right font-semibold text-base leading-[22px] tracking-tight text-foreground">
+            <p>{markLine(marks, vault.stock1)}</p>
+            <p>{markLine(marks, vault.stock2)}</p>
           </div>
         </div>
       </div>
