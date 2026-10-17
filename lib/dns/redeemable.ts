@@ -11,6 +11,10 @@ export function maxRedeemableShares(claim: bigint, navUsdc: bigint, shareSupply:
   return assetsForShares(capped, navUsdc, shareSupply) > BigInt(0) ? capped : BigInt(0);
 }
 
+export function redeemableValueUsdc(shares: bigint, r: Redeemable): bigint | null {
+  return r.groupsInFlight > BigInt(0) ? null : assetsForShares(shares, r.navUsdc, r.shareSupply);
+}
+
 export type Redeemable = {
   claim: bigint;
   navUsdc: bigint;

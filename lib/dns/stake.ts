@@ -3,6 +3,7 @@ import { getAddressEncoder, type Address } from "@solana/kit";
 import { ThalerDnsClient } from "@/lib/dns/client";
 import { memberShare, sharesForAssets } from "@/lib/dns/math";
 import { groupValueFromFills, quoteStakeShares, type StakeGroupFills } from "@/lib/dns/quote";
+import { isSettling } from "@/lib/dns/stats";
 import type { DnsVaultInfo } from "@/lib/dns/load";
 
 export const STAKE_REQUEST_DISCRIMINATOR = 5;
@@ -43,14 +44,14 @@ export type DnsPendingRequest = {
   sharesExact: boolean;
 };
 
-// What settle_group and settle_stake would pay a member if the keeper priced the group now; null when the mode or the marks are unknown.
+// What settle_group and settle_stake would pay a member if the keeper priced the group now; null when the mode or the marks are unknown or while a stake group is in flight.
 export function estimatePendingShares(
   g: StakeGroupFills & { status: number },
   usdc: bigint,
   v: DnsVaultInfo,
   legsRequired: number | null,
 ): bigint | null {
-  if (legsRequired === null || g.total_usdc === BigInt(0)) return null;
+  if (legsRequired === null || g.total_usdc === BigInt(0) || isSettling(v)) return null;
   let groupShares: bigint | null;
   if (g.status === GROUP_EXECUTING) {
     const value = groupValueFromFills(g, v);

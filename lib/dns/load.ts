@@ -41,6 +41,14 @@ export type DnsVaultInfo = {
   risk: DnsLegRisk | null;
   pressureBps: number | null;
   layoutVersion: number | null;
+  capturedAtMs: number | null;
+  history: {
+    inceptionAtMs: number | null;
+    inceptionNavUsdc: bigint;
+    inceptionShareSupply: bigint;
+    depositedUsdc: bigint;
+    sharesMinted: bigint;
+  } | null;
 };
 
 export type DnsVaultParams = {
@@ -93,6 +101,7 @@ type VaultRow = {
   fees?: Record<keyof DnsFees, string> | null;
   risk?: DnsLegRisk | null;
   pressureBps?: number | null;
+  history?: { inceptionAtMs: number | null; inceptionNavUsdc: string; inceptionShareSupply: string; depositedUsdc: string; sharesMinted: string } | null;
   hedge: {
     mainnetSlot: number;
     capturedAtMs: number;
@@ -149,7 +158,7 @@ export async function loadDns(
   const vaults: Record<string, DnsVaultInfo> = {};
   if (config.apiUrl) {
     try {
-      const body = (await fetchJson(`${config.apiUrl}/public/dns/vaults`)) as { vaults: VaultRow[] };
+      const body = (await fetchJson(`${config.apiUrl}/public/dns/vaults`)) as { capturedAtMs?: number | null; vaults: VaultRow[] };
       for (const v of strategies) {
         const a = config.stockMints[v.stock1];
         const b = config.stockMints[v.stock2];
@@ -203,6 +212,16 @@ export async function loadDns(
           risk: row.risk ?? null,
           pressureBps: typeof row.pressureBps === "number" ? row.pressureBps : null,
           layoutVersion: typeof row.layoutVersion === "number" ? row.layoutVersion : null,
+          capturedAtMs: typeof body.capturedAtMs === "number" ? body.capturedAtMs : null,
+          history: row.history
+            ? {
+                inceptionAtMs: row.history.inceptionAtMs,
+                inceptionNavUsdc: BigInt(row.history.inceptionNavUsdc),
+                inceptionShareSupply: BigInt(row.history.inceptionShareSupply),
+                depositedUsdc: BigInt(row.history.depositedUsdc),
+                sharesMinted: BigInt(row.history.sharesMinted),
+              }
+            : null,
         };
       }
     } catch (err) {

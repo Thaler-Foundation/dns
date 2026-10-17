@@ -10,7 +10,7 @@ import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatRate, formatSignedUsdc, formatUsdc, formatUsdcExact, lastMirrorRead, stdnsRateUsdc, vaultTvlUsdc } from "@/lib/dns/stats";
+import { deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatUsdc, formatUsdcAtoms, formatUsdcExact, isSettling, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -19,11 +19,11 @@ function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures 
     return (
       <>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Long {stock}</span>
+          <span className="text-muted-foreground">Long {stock} (Spot)</span>
           <span className="font-semibold text-muted-foreground">no position yet</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Short {stock}</span>
+          <span className="text-muted-foreground">Short {stock} (Perp)</span>
           <span className="font-semibold text-muted-foreground">no position yet</span>
         </div>
       </>
@@ -32,11 +32,11 @@ function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures 
   return (
     <>
       <div className="flex items-center justify-between" data-leg-long={stock}>
-        <span className="text-muted-foreground">Long {stock}</span>
+        <span className="text-muted-foreground">Long {stock} (Spot)</span>
         <span className="font-semibold text-foreground">{figures.longShares} sh ({formatAtoms(figures.longUsdc, USDC_DECIMALS, 2)} USDC)</span>
       </div>
       <div className="flex items-center justify-between" data-leg-short={stock}>
-        <span className="text-muted-foreground">Short {stock}</span>
+        <span className="text-muted-foreground">Short {stock} (Perp)</span>
         <span className="font-semibold text-foreground">{figures.shortShares} sh ({formatAtoms(figures.shortUsdc, USDC_DECIMALS, 2)} USDC)</span>
       </div>
       <div className="flex items-center justify-between text-[11px]">
@@ -76,9 +76,10 @@ function VaultDetailContent({ id }: { id: string }) {
   const dns = useDns();
   const info = vault ? dns.vaults[vault.id] : undefined;
   const mirrorRead = lastMirrorRead(info);
+  const apy = formatApy(vaultApy(info));
   const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
   const position = wallet.connected && held ? held.atoms : BigInt(0);
-  const positionUsdc = info ? assetsForShares(position, info.navUsdc, info.shareSupply) : BigInt(0);
+  const positionUsdc = !info ? BigInt(0) : isSettling(info) ? null : assetsForShares(position, info.navUsdc, info.shareSupply);
   const refreshPosition = () => {
     void dns.refresh();
   };
@@ -123,9 +124,8 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="flex items-center gap-4 self-start sm:self-auto shrink-0">
           <div className="text-right sm:text-left">
             <span className="text-[11px] text-muted-foreground block font-mono">Net APY</span>
-            {/* TODO: add net APY calculation */}
             <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-              n/a
+              {apy}
             </span>
           </div> 
         </div>
@@ -136,9 +136,8 @@ function VaultDetailContent({ id }: { id: string }) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Your Position
           </span>
-          {/* TODO: add Position APY calculation */}
           <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-            APY n/a
+            APY {apy}
           </span>
         </div>
 
@@ -150,7 +149,7 @@ function VaultDetailContent({ id }: { id: string }) {
                 {formatAtoms(position, STDNS_DECIMALS, 6)} stDNS
               </p>
               <p className="text-xs font-mono text-muted-foreground">
-                {formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC
+                {positionUsdc === null ? "n/a" : `${formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC`}
               </p>
             </div>
           </div>
@@ -229,8 +228,8 @@ function VaultDetailContent({ id }: { id: string }) {
             <span className="font-medium text-foreground">{formatUsdc(deployedUsdc(info))}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Pending stake:</span>
-            <span className="font-medium text-foreground">{info ? formatUsdc(info.pendingStakeUsdc) : "n/a"}</span>
+            <span className="text-muted-foreground">Unclaimed yield:</span>
+            <span className="font-medium text-foreground">{formatSignedUsdcAtoms(unclaimedYieldUsdc(info))}</span>
           </div>
         </div>
       </div>
@@ -260,20 +259,20 @@ function VaultDetailContent({ id }: { id: string }) {
 
       <div className="rounded-sm border border-border bg-card p-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
         <div>
-          <span className="text-[11px] text-muted-foreground block">Income since inception</span>
-          {info?.fees ? formatSignedUsdc(info.fees.cumulativeIncome) : "n/a"}
+          <span className="text-[11px] text-muted-foreground block">Total income</span>
+          {formatSignedUsdcAtoms(totalIncomeUsdc(info))}
         </div>
         <div>
-          <span className="text-[11px] text-muted-foreground block">Fees accrued</span>
-          {info?.fees ? formatUsdc(info.fees.accruedUsdc) : "n/a"}
+          <span className="text-[11px] text-muted-foreground block">Yield accrued</span>
+          {formatUsdcAtoms(yieldAccruedUsdc(info))}
         </div>
         <div>
           <span className="text-[11px] text-muted-foreground block">Fees collected</span>
-          {info?.fees ? formatUsdc(info.fees.collectedUsdc) : "n/a"}
+          {info?.fees ? formatUsdcAtoms(info.fees.collectedUsdc) : "n/a"}
         </div>
         <div>
-          <span className="text-[11px] text-muted-foreground block">Cushion retained</span>
-          {info?.fees ? formatUsdc(info.fees.cushionRetained) : "n/a"}
+          <span className="text-[11px] text-muted-foreground block">Cushion amount</span>
+          {info?.fees ? formatUsdcAtoms(info.fees.cushionRetained) : "n/a"}
         </div>
       </div>
 

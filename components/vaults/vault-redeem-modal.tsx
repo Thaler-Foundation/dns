@@ -15,8 +15,9 @@ import { useDns, type DnsVaultInfo } from "@/hooks/use-dns";
 import type { DnsMints } from "@/lib/dns/tx";
 import { redeemIxs, requestRedeemIxs } from "@/lib/dns/tx";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms, parseAtoms } from "@/lib/dns/math";
+import { isSettling } from "@/lib/dns/stats";
 import type { VaultStrategy } from "@/lib/vaults-data";
-import { readRedeemable, type Redeemable } from "@/lib/dns/redeemable";
+import { readRedeemable, redeemableValueUsdc, type Redeemable } from "@/lib/dns/redeemable";
 
 interface VaultRedeemModalProps {
   vault: VaultStrategy;
@@ -161,9 +162,7 @@ export function VaultRedeemModal({
           </div>
 
           {redeemable !== null && (
-            <p className="text-[11px] font-mono text-muted-foreground" data-redeemable={limit.toString()} data-cooldown-slots={cooldownSlots.toString()}>
-              Redeemable now: {formatAtoms(limit, STDNS_DECIMALS, 6)} stDNS ({formatAtoms(assetsForShares(limit, redeemable.navUsdc, redeemable.shareSupply), USDC_DECIMALS)} USDC). Larger amounts are requested and paid after a {cooldownMinutes} minute cooldown.
-            </p>
+            <RedeemableNow limit={limit} redeemable={redeemable} cooldownSlots={cooldownSlots} cooldownMinutes={cooldownMinutes} />
           )}
 
           <div className="rounded-sm border border-border bg-background/50 p-3.5">
@@ -174,7 +173,7 @@ export function VaultRedeemModal({
                 <span className="font-semibold text-xs tracking-tight">USDC</span>
               </div>
               <p className="w-full text-right font-mono text-xl font-bold text-foreground">
-                {formatAtoms(payout, USDC_DECIMALS)}
+                {isSettling(info) ? "n/a" : formatAtoms(payout, USDC_DECIMALS)}
               </p>
             </div>
           </div>
@@ -205,5 +204,24 @@ export function VaultRedeemModal({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function RedeemableNow({
+  limit,
+  redeemable,
+  cooldownSlots,
+  cooldownMinutes,
+}: {
+  limit: bigint;
+  redeemable: Redeemable;
+  cooldownSlots: bigint;
+  cooldownMinutes: number;
+}) {
+  const nowUsdc = redeemableValueUsdc(limit, redeemable);
+  return (
+    <p className="text-[11px] font-mono text-muted-foreground" data-redeemable={limit.toString()} data-cooldown-slots={cooldownSlots.toString()}>
+      Redeemable now: {formatAtoms(limit, STDNS_DECIMALS, 6)} stDNS ({nowUsdc === null ? "n/a" : `${formatAtoms(nowUsdc, USDC_DECIMALS)} USDC`}). Larger amounts are requested and paid after a {cooldownMinutes} minute cooldown.
+    </p>
   );
 }
