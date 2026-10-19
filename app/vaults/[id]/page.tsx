@@ -9,8 +9,9 @@ import { VaultRedeemModal } from "@/components/vaults/vault-redeem-modal";
 import { useDns } from "@/hooks/use-dns";
 import { useDnsWallet } from "@/hooks/use-dns-wallet";
 import { STDNS_DECIMALS, USDC_DECIMALS, assetsForShares, formatAtoms } from "@/lib/dns/math";
+import { apyClass } from "@/components/vaults/apy-class";
 import { legFigures, type LegFigures } from "@/lib/dns/hedge";
-import { deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatSignedUsdcCents, formatUsdc, formatUsdcAtoms, formatUsdcCents, formatUsdcExact, isSettling, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
+import { apyBasis, deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, formatSignedUsdcCents, formatUsdc, formatUsdcAtoms, formatUsdcCents, formatUsdcExact, isSettling, lastMirrorRead, stdnsRateUsdc, totalIncomeUsdc, unclaimedYieldUsdc, vaultApy, vaultTvlUsdc, yieldAccruedUsdc } from "@/lib/dns/stats";
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
@@ -82,7 +83,9 @@ function VaultDetailContent({ id }: { id: string }) {
   const dns = useDns();
   const info = vault ? dns.vaults[vault.id] : undefined;
   const mirrorRead = lastMirrorRead(info);
-  const apy = formatApy(vaultApy(info));
+  const apyValue = vaultApy(info);
+  const apy = formatApy(apyValue);
+  const basis = apyBasis(info);
   const held = vault ? dns.positions.find((p) => p.vaultId === vault.id) : undefined;
   const position = wallet.connected && held ? held.atoms : BigInt(0);
   const positionUsdc = !info ? BigInt(0) : isSettling(info) ? null : assetsForShares(position, info.navUsdc, info.shareSupply);
@@ -130,9 +133,10 @@ function VaultDetailContent({ id }: { id: string }) {
         <div className="flex items-center gap-4 self-start sm:self-auto shrink-0">
           <div className="text-right sm:text-left">
             <span className="text-[11px] text-muted-foreground block font-mono">Net APY</span>
-            <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
+            <span className={`text-xl font-bold font-mono ${apyClass(apyValue)}`}>
               {apy}
             </span>
+            <span className="text-[11px] text-muted-foreground block">{basis}</span>
           </div> 
         </div>
       </div>
@@ -142,9 +146,12 @@ function VaultDetailContent({ id }: { id: string }) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Your Position
           </span>
-          <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-            APY {apy}
-          </span>
+          <div className="text-right">
+            <span className={`text-xs font-mono font-bold ${apyClass(apyValue)}`}>
+              APY {apy}
+            </span>
+            <span className="text-[11px] text-muted-foreground block">{basis}</span>
+          </div>
         </div>
 
         <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

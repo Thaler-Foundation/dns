@@ -101,6 +101,21 @@ export function formatApy(apy: number | null): string {
   return `${pct === "-0.00" ? "0.00" : pct}%`;
 }
 
+export type ApyTone = "up" | "down" | "none";
+
+export function apyTone(apy: number | null): ApyTone {
+  if (apy === null || !Number.isFinite(apy)) return "none";
+  return apy < 0 ? "down" : "up";
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function apyBasis(info: DnsVaultInfo | undefined): string {
+  if (vaultApy(info) === null || info?.history?.inceptionAtMs == null) return "from day 7";
+  const d = new Date(info.history.inceptionAtMs);
+  return `since ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+}
+
 export function totalIncomeUsdc(info: DnsVaultInfo | undefined): bigint | null {
   if (!info?.hedge || !info.fees) return null;
   return info.hedge.legs.a.fundingReceived + info.hedge.legs.b.fundingReceived + info.fees.dividendAccrued;
