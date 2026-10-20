@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { VaultPairBadge, TokenizedStockBadge } from "@/components/vaults/stock-icons";
 import { useDns } from "@/hooks/use-dns";
-import { formatApy, formatRateUsdc, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
+import { apyClass } from "@/components/vaults/apy-class";
+import { apyBasis, formatApy, formatRateUsdc, formatUsdcExact, stdnsRateUsdc, vaultApy, vaultTvlUsdc } from "@/lib/dns/stats";
 import { type VaultStrategy, hasTokenizedStock } from "@/lib/vaults-data";
 import { ChevronRight } from "lucide-react";
 
@@ -18,7 +19,8 @@ export function VaultListRow({ vault }: VaultListRowProps) {
   const dns = useDns();
   const tvl = formatUsdcExact(vaultTvlUsdc(dns.vaults[vault.id]));
   const rate = formatRateUsdc(stdnsRateUsdc(dns.vaults[vault.id]));
-  const apy = formatApy(vaultApy(dns.vaults[vault.id]));
+  const apyValue = vaultApy(dns.vaults[vault.id]);
+  const apy = formatApy(apyValue);
 
   const handleDepositClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,9 +71,10 @@ export function VaultListRow({ vault }: VaultListRowProps) {
       </td>
 
       <td className="py-3 px-3 text-right">
-        <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
+        <span className={`text-sm font-bold font-mono ${apyClass(apyValue)}`}>
           {apy}
         </span>
+        <span className="text-[11px] text-muted-foreground block">{apyBasis(dns.vaults[vault.id])}</span>
       </td>
 
       <td className="py-3 pl-3 pr-4 text-right">
