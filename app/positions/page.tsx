@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { UsdcUnit } from "@/components/usdc-unit";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export default function PositionsPage() {
                 <div className="rounded-sm border border-border bg-card p-3.5">
                   <span className="text-[11px] text-muted-foreground block font-mono">Total Value</span>
                   <span className="text-sm font-bold font-mono text-foreground mt-0.5 block">
-                    {total === null ? "n/a" : <>{formatUsdcCents(total)} <span className="font-normal">(USDC)</span></>}
+                    {total === null ? "n/a" : <>{formatUsdcCents(total)} <UsdcUnit /></>}
                   </span>
                 </div>
                 <div className="rounded-sm border border-border bg-card p-3.5">
@@ -105,7 +106,7 @@ export default function PositionsPage() {
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <p className="text-sm font-mono font-semibold text-foreground">
-                        {isSettling(dns.vaults[p.vaultId]) ? "n/a" : <>{formatUsdcCents(p.usdcValue)} <span className="font-normal">(USDC)</span></>}
+                        {isSettling(dns.vaults[p.vaultId]) ? "n/a" : <>{formatUsdcCents(p.usdcValue)} <UsdcUnit /></>}
                       </p>
                       <Link
                         href={`/vaults/${v.id}`}
@@ -131,7 +132,7 @@ export default function PositionsPage() {
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-foreground truncate">{v.displayName}</p>
                             <p className="text-xs font-mono text-muted-foreground">
-                              {formatAtoms(q.tdnsAtoms, TDNS_DECIMALS, 6)} tDNS ({formatAtoms(q.usdcAtoms, USDC_DECIMALS, 2)} USDC)
+                              {formatAtoms(q.tdnsAtoms, TDNS_DECIMALS, 6)} tDNS (${formatAtoms(q.usdcAtoms, USDC_DECIMALS, 2)})
                             </p>
                           </div>
                         </div>
@@ -164,7 +165,7 @@ export default function PositionsPage() {
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-foreground truncate">{v.displayName}</p>
                             <p className="text-xs font-mono text-muted-foreground">
-                              {formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS ({isSettling(info) ? "n/a" : `~${formatAtoms(assetsForShares(q.shares, info.navUsdc, info.shareSupply), USDC_DECIMALS, 2)} USDC`} at the published NAV)
+                              {formatAtoms(q.shares, STDNS_DECIMALS, 6)} stDNS ({isSettling(info) ? "n/a" : `~$${formatAtoms(assetsForShares(q.shares, info.navUsdc, info.shareSupply), USDC_DECIMALS, 2)}`} at the published NAV)
                             </p>
                           </div>
                         </div>

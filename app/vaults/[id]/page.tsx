@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteFooter } from "@/components/site-footer";
+import { UsdcUnit } from "@/components/usdc-unit";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { StDnsTokenIcon, StockIcon, TokenizedStockBadge, VaultPairBadge } from "@/components/vaults/stock-icons";
@@ -16,8 +17,7 @@ import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
 const TIPS = {
-  hedge: "Entry value of the short minus its value at the current mark. It offsets the spot leg and a harvest moves it into Margin.",
-  gain: "NAV minus the USDC deposited: the value sitting above the principal.",
+  gain: "NAV minus the deposits: the value sitting above the principal.",
   income: "Funding received by both shorts plus dividends, before the 11% fee and the cushion.",
   yield: "Income up to the fee high-water mark, minus the fees accrued and collected and the cushion retained.",
 };
@@ -41,16 +41,16 @@ function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures 
     <>
       <div className="flex items-center justify-between" data-leg-long={stock}>
         <span className="text-muted-foreground">Long {stock} (Spot)</span>
-        <span className="font-semibold text-foreground">{figures.longShares} sh ({formatAtoms(figures.longUsdc, USDC_DECIMALS, 2)} USDC)</span>
+        <span className="font-semibold text-foreground">{figures.longShares} sh (${formatAtoms(figures.longUsdc, USDC_DECIMALS, 2)})</span>
       </div>
       <div className="flex items-center justify-between" data-leg-short={stock}>
         <span className="text-muted-foreground">Short {stock} (Perp)</span>
-        <span className="font-semibold text-foreground">{figures.shortShares} sh ({formatAtoms(figures.shortUsdc, USDC_DECIMALS, 2)} USDC)</span>
+        <span className="font-semibold text-foreground">{figures.shortShares} sh (${formatAtoms(figures.shortUsdc, USDC_DECIMALS, 2)})</span>
       </div>
       <div className="flex items-center justify-between text-[11px]">
         <span className="text-muted-foreground">Mark {figures.markUsdc}</span>
-        <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"} title={TIPS.hedge}>
-          {formatSignedUsdcCents(figures.unrealised)} Hedge uP&amp;L
+        <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+          {formatSignedUsdcCents(figures.unrealised)} unrealized
         </span>
       </div>
       <div className="flex items-center justify-between text-[11px]">
@@ -169,7 +169,7 @@ function VaultDetailContent({ id }: { id: string }) {
                 {formatAtoms(position, STDNS_DECIMALS, 6)} stDNS
               </p>
               <p className="text-xs font-mono text-muted-foreground">
-                {positionUsdc === null ? "n/a" : `${formatAtoms(positionUsdc, USDC_DECIMALS, 2)} USDC`}
+                {positionUsdc === null ? "n/a" : <>${formatAtoms(positionUsdc, USDC_DECIMALS, 2)} <UsdcUnit /></>}
               </p>
             </div>
           </div>

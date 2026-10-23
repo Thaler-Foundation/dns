@@ -180,8 +180,8 @@ export function SwapCard() {
       const tdns = formatAtoms(tdnsAtoms, 6);
       toast.success(
         direction === "mint"
-          ? `Minted ${tdns} tDNS for ${usdc} USDC`
-          : `Burned ${tdns} tDNS for ${usdc} USDC`,
+          ? `Minted ${tdns} tDNS for $${usdc}`
+          : `Burned ${tdns} tDNS for $${usdc}`,
         { description: signature }
       );
       setSellAmount("");

@@ -96,7 +96,7 @@ export function VaultRedeemModal({
         await redeemIxs(wallet.address, mints, info.vault, info.stdnsMint, shares)
       );
       toast.success(
-        `Withdrew ${formatAtoms(shares, STDNS_DECIMALS, 6)} stDNS for ${formatAtoms(payout, USDC_DECIMALS)} USDC`,
+        `Withdrew ${formatAtoms(shares, STDNS_DECIMALS, 6)} stDNS for $${formatAtoms(payout, USDC_DECIMALS)}`,
         { description: signature }
       );
       setAmount("");
@@ -221,7 +221,7 @@ export function RedeemableNow({
   const nowUsdc = redeemableValueUsdc(limit, redeemable);
   return (
     <p className="text-[11px] font-mono text-muted-foreground" data-redeemable={limit.toString()} data-cooldown-slots={cooldownSlots.toString()}>
-      Redeemable now: {formatAtoms(limit, STDNS_DECIMALS, 6)} stDNS ({nowUsdc === null ? "n/a" : `${formatAtoms(nowUsdc, USDC_DECIMALS)} USDC`}). Larger amounts are requested and paid after a {cooldownMinutes} minute cooldown.
+      Redeemable now: {formatAtoms(limit, STDNS_DECIMALS, 6)} stDNS ({nowUsdc === null ? "n/a" : `$${formatAtoms(nowUsdc, USDC_DECIMALS)}`}). Larger amounts are requested and paid after a {cooldownMinutes} minute cooldown.
     </p>
   );
 }
