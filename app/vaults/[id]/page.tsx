@@ -15,6 +15,13 @@ import { apyBasis, deployedUsdc, formatApy, formatRate, formatSignedUsdcAtoms, f
 import type { DnsHedgeLeg, DnsVaultInfo } from "@/lib/dns/load";
 import { getVaultById, hasTokenizedStock, isTokenizedStock } from "@/lib/vaults-data";
 
+const TIPS = {
+  hedge: "Entry value of the short minus its value at the current mark. It offsets the spot leg and a harvest moves it into Margin.",
+  gain: "NAV minus the USDC deposited: the value sitting above the principal.",
+  income: "Funding received by both shorts plus dividends, before the 11% fee and the cushion.",
+  yield: "Income up to the fee high-water mark, minus the fees accrued and collected and the cushion retained.",
+};
+
 function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures | null; leg: DnsHedgeLeg | null }) {
   if (!figures || !leg) {
     return (
@@ -42,8 +49,8 @@ function LegLines({ stock, figures, leg }: { stock: string; figures: LegFigures 
       </div>
       <div className="flex items-center justify-between text-[11px]">
         <span className="text-muted-foreground">Mark {figures.markUsdc}</span>
-        <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
-          {formatSignedUsdcCents(figures.unrealised)} unrealized
+        <span className={figures.unrealised < BigInt(0) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"} title={TIPS.hedge}>
+          {formatSignedUsdcCents(figures.unrealised)} Hedge uP&amp;L
         </span>
       </div>
       <div className="flex items-center justify-between text-[11px]">
@@ -241,7 +248,7 @@ function VaultDetailContent({ id }: { id: string }) {
             <span className="font-medium text-foreground">{formatUsdc(deployedUsdc(info))}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Unclaimed yield:</span>
+            <span className="text-muted-foreground" title={TIPS.gain}>Net gain:</span>
             <span className="font-medium text-foreground">{formatSignedUsdcAtoms(unclaimedYieldUsdc(info))}</span>
           </div>
         </div>
@@ -272,11 +279,11 @@ function VaultDetailContent({ id }: { id: string }) {
 
       <div className="rounded-sm border border-border bg-card p-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
         <div>
-          <span className="text-[11px] text-muted-foreground block">Total income</span>
+          <span className="text-[11px] text-muted-foreground block" title={TIPS.income}>Total income (gross)</span>
           {formatSignedUsdcAtoms(totalIncomeUsdc(info))}
         </div>
         <div>
-          <span className="text-[11px] text-muted-foreground block">Yield accrued</span>
+          <span className="text-[11px] text-muted-foreground block" title={TIPS.yield}>Yield accrued (net)</span>
           {formatUsdcAtoms(yieldAccruedUsdc(info))}
         </div>
         <div>
