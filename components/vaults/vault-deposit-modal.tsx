@@ -1,6 +1,7 @@
 "use client";
 
 import { TokenIcon } from "@/components/token-icons";
+import { UsdcUnit } from "@/components/usdc-unit";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -227,10 +228,10 @@ export function VaultDepositModal({
                   className="w-full bg-transparent text-right font-mono text-xl font-bold text-foreground placeholder:text-muted-foreground/40 outline-none"
                 />
                 <p className="text-[11px] font-mono text-muted-foreground">
-                  ~{usdcEquivalent(numericAmount || 0).toLocaleString("en-US", {
+                  ~${usdcEquivalent(numericAmount || 0).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
-                  })} USDC
+                  })}
                 </p>
               </div>
             </div>
@@ -252,7 +253,7 @@ export function VaultDepositModal({
                   {previewShares === null ? "n/a" : formatAtoms(previewShares, STDNS_DECIMALS, 6)}
                 </p>
                 <p className="text-[11px] font-mono text-muted-foreground">
-                  ~{totalUsdcLabel} USDC
+                  ~${totalUsdcLabel} <UsdcUnit />
                 </p>
               </div>
             </div>
@@ -323,7 +324,7 @@ export function VaultDepositModal({
           </Button>
           {dns.mixer && (roomLeft !== null || isSettling(info)) && (
             <p className="text-[11px] font-mono text-muted-foreground text-center" data-room-left={roomLeft === null ? "n/a" : roomLeft.toString()} data-min-stake={minStake.toString()}>
-              Minimum {formatAtoms(minStake, TDNS_DECIMALS)} tDNS. Room left: {roomLeft === null ? "n/a" : formatAtoms(roomLeft, USDC_DECIMALS, 2)} of {formatAtoms(dns.mixer.vaultCapUsdc, USDC_DECIMALS, 0)} USDC.
+              Minimum {formatAtoms(minStake, TDNS_DECIMALS)} tDNS. Room left: {roomLeft === null ? "n/a" : `$${formatAtoms(roomLeft, USDC_DECIMALS, 2)}`} of ${formatAtoms(dns.mixer.vaultCapUsdc, USDC_DECIMALS, 0)}.
             </p>
           )}
           <p className="text-[11px] text-muted-foreground text-center">
@@ -342,7 +343,7 @@ export function VaultDepositModal({
                 </div>
                 <div className="text-right font-mono">
                   <p className="text-foreground">
-                    {principalUsdc} USDC
+                    ${principalUsdc}
                   </p>
                 </div>
               </div>
@@ -352,7 +353,7 @@ export function VaultDepositModal({
                 </div>
                 <div className="text-right font-mono">
                   <p className="text-foreground">
-                    {bufferAmount} USDC
+                    ${bufferAmount}
                   </p>
                 </div>
               </div>

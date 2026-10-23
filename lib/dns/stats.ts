@@ -81,7 +81,7 @@ export function formatRateUsdc(atoms: bigint | null): string {
 }
 
 export function formatRate(atoms: bigint | null): string {
-  return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)} USDC`;
+  return atoms === null ? "n/a" : `1 stDNS = ${formatRateUsdc(atoms)}`;
 }
 
 export function vaultApy(info: DnsVaultInfo | undefined): number | null {
