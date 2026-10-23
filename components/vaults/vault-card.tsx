@@ -21,7 +21,7 @@ function MarkLine({ marks, ticker }: { marks: StockMarksView; ticker: StockTicke
   return (
     <>
       <StockIcon ticker={ticker} size={20} />
-      <span className={`text-right ${tone}`}>{atoms === null ? "n/a" : formatUsdcCents(atoms)}</span>
+      <span className={`text-left ${tone}`}>{atoms === null ? "n/a" : formatUsdcCents(atoms)}</span>
     </>
   );
 }
